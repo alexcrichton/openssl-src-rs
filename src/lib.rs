@@ -74,6 +74,10 @@ impl Build {
             .arg("no-zlib-dynamic")
             .arg("no-shared");
 
+        if target.contains("unknown-linux-musl") {
+            configure.arg("no-engine");
+        }
+
         let os = match target {
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
@@ -115,7 +119,7 @@ impl Build {
         let compiler = gcc.get_compiler();
         configure.env("CC", compiler.path());
         let path = compiler.path().to_str().unwrap();
-        if path.ends_with("-gcc") {
+        if path.ends_with("-gcc") && !target.contains("unknown-linux-musl") {
             let path = &path[..path.len() - 4];
             configure.env("RANLIB", format!("{}-ranlib", path));
             configure.env("AR", format!("{}-ar", path));
