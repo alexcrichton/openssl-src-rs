@@ -44,6 +44,7 @@ matrix:
               --arch x86_64
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
+
     - os: osx
     - os: osx
       env: TARGET_TO_TEST=i686-apple-darwin
@@ -66,6 +67,11 @@ matrix:
           packages:
             - gcc-aarch64-linux-gnu
             - libc6-dev-arm64-cross
+    - env: TARGET_TO_TEST=x86_64-unknown-linux-musl
+      addons:
+        apt:
+          packages:
+            - musl-tools
     - env: TARGET_TO_TEST=x86_64-pc-windows-gnu
       addons:
         apt:
