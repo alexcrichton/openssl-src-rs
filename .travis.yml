@@ -34,6 +34,16 @@ matrix:
               --arch x86
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
+    - env: TARGET_TO_TEST=x86_64-linux-android
+      before_install:
+        - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
+        - unzip -q android-ndk-r15b-linux-x86_64.zip
+        - android-ndk-r15b/build/tools/make_standalone_toolchain.py
+              --unified-headers
+              --install-dir $HOME/android/ndk
+              --arch x86_64
+              --api 24
+        - export PATH=$PATH:$HOME/android/ndk/bin
     - os: osx
     - os: osx
       env: TARGET_TO_TEST=i686-apple-darwin

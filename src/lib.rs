@@ -101,6 +101,7 @@ impl Build {
             "arm-linux-androideabi" => "android-armeabi",
             "aarch64-linux-android" => "android64-aarch64",
             "i686-linux-android" => "android-x86",
+            "x86_64-linux-android" => "android64",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
