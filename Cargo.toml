@@ -1,6 +1,10 @@
 [package]
 name = "openssl-src"
-version = "0.1.0"
+version = "110.0.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies]
+gcc = "0.3"
+
+[dev-dependencies]
+tempdir = "0.3"
