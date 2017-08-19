@@ -57,9 +57,9 @@ impl Build {
             fs::remove_dir_all(&install_dir).unwrap();
         }
 
-        let inner_dir = source_dir();
-        fs::create_dir_all(&build_dir).unwrap();
-        cp_r(&inner_dir, &build_dir);
+        let inner_dir = build_dir.join("src");
+        fs::create_dir_all(&inner_dir).unwrap();
+        cp_r(&source_dir(), &inner_dir);
 
         let mut configure = Command::new("perl");
         configure.arg("./Configure");
