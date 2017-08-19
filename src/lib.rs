@@ -13,6 +13,7 @@ pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
     host: Option<String>,
+    cross_sysroot: Option<PathBuf>,
 }
 
 impl Build {
@@ -23,6 +24,7 @@ impl Build {
             }),
             target: env::var("TARGET").ok(),
             host: env::var("HOST").ok(),
+            cross_sysroot: None,
         }
     }
 
@@ -41,7 +43,7 @@ impl Build {
         self
     }
 
-    pub fn build(&self) -> (PathBuf, PathBuf) {
+    pub fn build(&mut self) -> (PathBuf, PathBuf) {
         let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR not set");
@@ -72,10 +74,6 @@ impl Build {
             .arg("no-zlib-dynamic")
             .arg("no-shared");
 
-        if target == "x86_64-pc-windows-gnu" {
-            configure.arg("no-asm");
-        }
-
         let os = match target {
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
@@ -100,6 +98,9 @@ impl Build {
             "x86_64-unknown-netbsd" => "BSD-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "i686-pc-windows-gnu" => "mingw",
+            "arm-linux-androideabi" => "android-armeabi",
+            "aarch64-linux-android" => "android64-aarch64",
+            "i686-linux-android" => "android-x86",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
@@ -122,23 +123,51 @@ impl Build {
             configure.arg(arg);
         }
 
+        if target.contains("android") && self.cross_sysroot.is_none() {
+            for path in env::split_paths(&env::var_os("PATH").unwrap()) {
+                if !path.join(compiler.path()).exists() {
+                    continue
+                }
+                let path = path.parent().unwrap(); // chop off 'bin'
+                self.cross_sysroot = Some(path.join("sysroot"));
+                break
+            }
+        }
+
         configure.current_dir(&inner_dir);
-        run_command(configure, "configuring OpenSSL build");
+        self.run_command(configure, "configuring OpenSSL build");
 
         let mut depend = Command::new("make");
         depend.arg("depend").current_dir(&inner_dir);
-        run_command(depend, "building OpenSSL dependencies");
+        self.run_command(depend, "building OpenSSL dependencies");
 
         let mut build = Command::new("make");
         build.current_dir(&inner_dir);
-        run_command(build, "building OpenSSL");
+        self.run_command(build, "building OpenSSL");
 
         let mut install = Command::new("make");
         install.arg("install").current_dir(&inner_dir)
             .arg(format!("DESTDIR={}", install_dir.display()));
-        run_command(install, "installing OpenSSL");
+        self.run_command(install, "installing OpenSSL");
 
         (lib_dir, include_dir)
+    }
+
+    fn run_command(&self, mut command: Command, desc: &str) {
+        if let Some(ref path) = self.cross_sysroot {
+            command.env("CROSS_SYSROOT", path);
+        }
+        let status = command.status().unwrap();
+        if !status.success() {
+            panic!("
+    Error {}:
+        Command: {:?}
+        Exit status: {}
+    ",
+                desc,
+                command,
+                status);
+        }
     }
 }
 
@@ -155,20 +184,6 @@ fn cp_r(src: &Path, dst: &Path) {
             let _ = fs::remove_file(&dst);
             fs::copy(&path, &dst).unwrap();
         }
-    }
-}
-
-fn run_command(mut command: Command, desc: &str) {
-    let status = command.status().unwrap();
-    if !status.success() {
-        panic!("
-Error {}:
-	Command: {:?}
-    Exit status: {}
-",
-            desc,
-		    command,
-            status);
     }
 }
 
