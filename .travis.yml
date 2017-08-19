@@ -10,10 +10,10 @@ matrix:
         - unzip -q android-ndk-r15b-linux-x86_64.zip
         - android-ndk-r15b/build/tools/make_standalone_toolchain.py
               --unified-headers
-              --install-dir /android/ndk
+              --install-dir $HOME/android/ndk
               --arch arm
               --api 24
-        - export PATH=$PATH:/android/ndk/bin
+        - export PATH=$PATH:$HOME/android/ndk/bin
     - os: osx
     - os: osx
       env: TARGET_TO_TEST=i686-apple-darwin
