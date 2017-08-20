@@ -16,6 +16,12 @@ pub struct Build {
     cross_sysroot: Option<PathBuf>,
 }
 
+pub struct Artifacts {
+    include_dir: PathBuf,
+    lib_dir: PathBuf,
+    libs: Vec<String>,
+}
+
 impl Build {
     pub fn new() -> Build {
         Build {
@@ -43,7 +49,7 @@ impl Build {
         self
     }
 
-    pub fn build(&mut self) -> (PathBuf, PathBuf) {
+    pub fn build(&mut self) -> Artifacts {
         let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR not set");
@@ -222,9 +228,17 @@ impl Build {
             self.run_command(install, "installing OpenSSL");
         }
 
-        let lib_dir = install_dir.join("lib");
-        let include_dir = install_dir.join("include");
-        (lib_dir, include_dir)
+        let libs = if target.contains("msvc") {
+            vec!["libssl".to_string(), "libcrypto".to_string()]
+        } else {
+            vec!["ssl".to_string(), "crypto".to_string()]
+        };
+
+        Artifacts {
+            lib_dir: install_dir.join("lib"),
+            include_dir: install_dir.join("include"),
+            libs: libs,
+        }
     }
 
     fn run_command(&self, mut command: Command, desc: &str) {
@@ -282,5 +296,27 @@ fn sanitize_sh(path: &Path) -> String {
             return None
         }
         Some(format!("/{}/{}", drive, &s[drive.len_utf8() + 2..]))
+    }
+}
+
+impl Artifacts {
+    pub fn include_dir(&self) -> &Path {
+        &self.include_dir
+    }
+
+    pub fn lib_dir(&self) -> &Path {
+        &self.lib_dir
+    }
+
+    pub fn libs(&self) -> &[String] {
+        &self.libs
+    }
+
+    pub fn print_cargo_metadata(&self) {
+        println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
+        for lib in self.libs.iter() {
+            println!("cargo:rustc-link-lib=static={}", lib);
+        }
+        println!("cargo:include={}", self.include_dir.display());
     }
 }
