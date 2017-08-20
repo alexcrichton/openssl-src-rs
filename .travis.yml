@@ -90,11 +90,6 @@ matrix:
         apt:
           packages:
             - gcc-mingw-w64-x86-64
-    - env: TARGET=i686-pc-windows-gnu
-      addons:
-        apt:
-          packages:
-            - gcc-mingw-w64-i686
 
     - rust: beta
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
