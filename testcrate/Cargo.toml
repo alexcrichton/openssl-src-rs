@@ -4,7 +4,9 @@ version = "0.1.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies]
+flate2 = "0.2"
 libc = "0.2"
+tar = "0.4"
 
 [build-dependencies]
 openssl-src = { path = ".." }

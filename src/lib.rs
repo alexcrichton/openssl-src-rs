@@ -9,6 +9,10 @@ pub fn source_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("openssl")
 }
 
+pub fn version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
 pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
@@ -318,5 +322,6 @@ impl Artifacts {
             println!("cargo:rustc-link-lib=static={}", lib);
         }
         println!("cargo:include={}", self.include_dir.display());
+        println!("cargo:lib={}", self.lib_dir.display());
     }
 }
