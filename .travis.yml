@@ -50,13 +50,13 @@ matrix:
         - export PATH=$PATH:$HOME/android/ndk/bin
 
     - os: osx
-      env: TARGET=x86_64-apple-darwin NO_ADD=1
+      env: TARGET=x86_64-apple-darwin NO_ADD=1 CMD=run
     - os: osx
-      env: TARGET=i686-apple-darwin
+      env: TARGET=i686-apple-darwin CMD=run
 
     - rust: stable
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
-    - env: TARGET=i686-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
+    - env: TARGET=i686-unknown-linux-gnu CMD=run
       addons:
         apt:
           packages:
@@ -75,7 +75,7 @@ matrix:
           packages:
             - gcc-aarch64-linux-gnu
             - libc6-dev-arm64-cross
-    - env: TARGET=x86_64-unknown-linux-musl
+    - env: TARGET=x86_64-unknown-linux-musl CMD=run
       addons:
         apt:
           packages:
@@ -94,15 +94,15 @@ matrix:
             - gcc-mingw-w64-i686
 
     - rust: beta
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
     - rust: nightly
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
 
 install:
   - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
-  - cargo build --manifest-path testcrate/Cargo.toml --target $TARGET
+  - cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET
 
 notifications:
   email:

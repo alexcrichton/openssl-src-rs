@@ -28,4 +28,4 @@ install:
 build: false
 
 test_script:
-  - cargo test --target %TARGET% --manifest-path testcrate/Cargo.toml
+  - cargo run --target %TARGET% --manifest-path testcrate/Cargo.toml
