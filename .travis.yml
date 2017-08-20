@@ -4,7 +4,7 @@ sudo: false
 
 matrix:
   include:
-    - env: TARGET_TO_TEST=arm-linux-androideabi
+    - env: TARGET=arm-linux-androideabi
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -14,7 +14,7 @@ matrix:
               --arch arm
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
-    - env: TARGET_TO_TEST=aarch64-linux-android
+    - env: TARGET=aarch64-linux-android
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -24,7 +24,7 @@ matrix:
               --arch arm64
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
-    - env: TARGET_TO_TEST=i686-linux-android
+    - env: TARGET=i686-linux-android
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -34,7 +34,7 @@ matrix:
               --arch x86
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
-    - env: TARGET_TO_TEST=x86_64-linux-android
+    - env: TARGET=x86_64-linux-android
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -46,55 +46,55 @@ matrix:
         - export PATH=$PATH:$HOME/android/ndk/bin
 
     - os: osx
-      env: TARGET_TO_TEST=x86_64-apple-darwin
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
     - os: osx
-      env: TARGET_TO_TEST=i686-apple-darwin
+      env: TARGET=i686-apple-darwin
 
     - rust: stable
-      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
-    - env: TARGET_TO_TEST=i686-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=i686-unknown-linux-gnu
       addons:
         apt:
           packages:
             - gcc-multilib
-    - env: TARGET_TO_TEST=arm-unknown-linux-gnueabi
+    - env: TARGET=arm-unknown-linux-gnueabi
       addons:
         apt:
           packages:
             - gcc-arm-linux-gnueabi
             - libc6-dev-armel-cross
-    - env: TARGET_TO_TEST=aarch64-unknown-linux-gnu
+    - env: TARGET=aarch64-unknown-linux-gnu
       addons:
         apt:
           packages:
             - gcc-aarch64-linux-gnu
             - libc6-dev-arm64-cross
-    - env: TARGET_TO_TEST=x86_64-unknown-linux-musl
+    - env: TARGET=x86_64-unknown-linux-musl
       addons:
         apt:
           packages:
             - musl-tools
-    - env: TARGET_TO_TEST=x86_64-pc-windows-gnu
+    - env: TARGET=x86_64-pc-windows-gnu
       addons:
         apt:
           packages:
             - gcc-mingw-w64-x86-64
-    - env: TARGET_TO_TEST=i686-pc-windows-gnu
+    - env: TARGET=i686-pc-windows-gnu
       addons:
         apt:
           packages:
             - gcc-mingw-w64-i686
 
     - rust: beta
-      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
     - rust: nightly
-      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
 
 install:
-  - if [ ! -z "$TARGET_TO_TEST" ]; then rustup target add $TARGET_TO_TEST; fi
+  - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
-  - cargo build --manifest-path testcrate/Cargo.toml --target $TARGET_TO_TEST
+  - cargo build --manifest-path testcrate/Cargo.toml --target $TARGET
 
 notifications:
   email:

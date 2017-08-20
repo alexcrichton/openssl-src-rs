@@ -284,25 +284,3 @@ fn sanitize_sh(path: &Path) -> String {
         Some(format!("/{}/{}", drive, &s[drive.len_utf8() + 2..]))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    extern crate tempdir;
-
-    use std::env;
-
-    use super::Build;
-    use self::tempdir::TempDir;
-
-    #[test]
-    fn build() {
-        let td = TempDir::new("openssl-build").unwrap();
-        let host = include_str!(concat!(env!("OUT_DIR"), "/target"));
-        let target = env::var("TARGET_TO_TEST").unwrap_or(host.to_string());
-        Build::new()
-            .out_dir(td.path())
-            .target(&target)
-            .host(host)
-            .build();
-    }
-}

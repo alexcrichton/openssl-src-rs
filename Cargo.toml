@@ -5,6 +5,3 @@ authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies]
 gcc = "0.3"
-
-[dev-dependencies]
-tempdir = "0.3"
