@@ -1,6 +1,9 @@
 environment:
   matrix:
   - TARGET: x86_64-pc-windows-msvc
+    RUSTFLAGS: -C target-feature=-crt-static
+  - TARGET: x86_64-pc-windows-msvc
+    RUSTFLAGS: -C target-feature=+crt-static
   - TARGET: i686-pc-windows-msvc
   - TARGET: i686-pc-windows-gnu
     MSYS_BITS: 32
