@@ -100,7 +100,7 @@ install:
   - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
-  - cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET
+  - cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
 
 notifications:
   email:
