@@ -5,6 +5,7 @@ sudo: false
 matrix:
   include:
     - env: TARGET=arm-linux-androideabi
+           CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -15,6 +16,7 @@ matrix:
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=aarch64-linux-android
+           CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=aarch64-linux-android-gcc
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -25,6 +27,7 @@ matrix:
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=i686-linux-android
+           CARGO_TARGET_I686_LINUX_ANDROID_LINKER=i686-linux-android-gcc
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -35,6 +38,7 @@ matrix:
               --api 24
         - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=x86_64-linux-android
+           CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=x86_64-linux-android-gcc
       before_install:
         - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
         - unzip -q android-ndk-r15b-linux-x86_64.zip
@@ -58,12 +62,14 @@ matrix:
           packages:
             - gcc-multilib
     - env: TARGET=arm-unknown-linux-gnueabi
+           CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABI_LINKER=arm-linux-gnueabi-gcc
       addons:
         apt:
           packages:
             - gcc-arm-linux-gnueabi
             - libc6-dev-armel-cross
     - env: TARGET=aarch64-unknown-linux-gnu
+           CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
       addons:
         apt:
           packages:
@@ -75,11 +81,13 @@ matrix:
           packages:
             - musl-tools
     - env: TARGET=x86_64-pc-windows-gnu
+           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc
       addons:
         apt:
           packages:
             - gcc-mingw-w64-x86-64
     - env: TARGET=i686-pc-windows-gnu
+           CARGO_TARGET_I686_PC_WINDOWS_GNU_LINKER=i686-w64-mingw32-gcc
       addons:
         apt:
           packages:
