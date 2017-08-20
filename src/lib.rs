@@ -107,11 +107,16 @@ impl Build {
         }
 
         let os = match target {
+            "aarch64-linux-android" => "android64-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
+            "arm-linux-androideabi" => "android-armeabi",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
             "i686-apple-darwin" => "darwin-i386-cc",
+            "i686-linux-android" => "android-x86",
+            "i686-pc-windows-gnu" => "mingw",
+            "i686-pc-windows-msvc" => "VC-WIN64A",
             "i686-unknown-freebsd" => "BSD-x86-elf",
             "i686-unknown-linux-gnu" => "linux-elf",
             "i686-unknown-linux-musl" => "linux-elf",
@@ -124,18 +129,13 @@ impl Build {
             "powerpc64le-unknown-linux-gnu" => "linux-ppc64le",
             "s390x-unknown-linux-gnu" => "linux64-s390x",
             "x86_64-apple-darwin" => "darwin64-x86_64-cc",
+            "x86_64-linux-android" => "android64",
+            "x86_64-pc-windows-gnu" => "mingw64",
+            "x86_64-pc-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
             "x86_64-unknown-linux-gnu" => "linux-x86_64",
             "x86_64-unknown-linux-musl" => "linux-x86_64",
             "x86_64-unknown-netbsd" => "BSD-x86_64",
-            "x86_64-pc-windows-gnu" => "mingw64",
-            "i686-pc-windows-gnu" => "mingw",
-            "arm-linux-androideabi" => "android-armeabi",
-            "aarch64-linux-android" => "android64-aarch64",
-            "i686-linux-android" => "android-x86",
-            "x86_64-linux-android" => "android64",
-            "x86_64-pc-windows-msvc" => "VC-WIN64A",
-            "i686-pc-windows-msvc" => "VC-WIN64A",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
