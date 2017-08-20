@@ -49,8 +49,6 @@ impl Build {
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR not set");
         let build_dir = out_dir.join("build");
         let install_dir = out_dir.join("install");
-        let lib_dir = install_dir.join("usr/local/lib");
-        let include_dir = install_dir.join("usr/local/include");
 
         if build_dir.exists() {
             fs::remove_dir_all(&build_dir).unwrap();
@@ -116,7 +114,7 @@ impl Build {
             "i686-apple-darwin" => "darwin-i386-cc",
             "i686-linux-android" => "android-x86",
             "i686-pc-windows-gnu" => "mingw",
-            "i686-pc-windows-msvc" => "VC-WIN64A",
+            "i686-pc-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
             "i686-unknown-linux-gnu" => "linux-elf",
             "i686-unknown-linux-musl" => "linux-elf",
@@ -216,6 +214,8 @@ impl Build {
             self.run_command(install, "installing OpenSSL");
         }
 
+        let lib_dir = install_dir.join("lib");
+        let include_dir = install_dir.join("include");
         (lib_dir, include_dir)
     }
 

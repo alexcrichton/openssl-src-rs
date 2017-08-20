@@ -46,10 +46,12 @@ matrix:
         - export PATH=$PATH:$HOME/android/ndk/bin
 
     - os: osx
+      env: TARGET_TO_TEST=x86_64-apple-darwin
     - os: osx
       env: TARGET_TO_TEST=i686-apple-darwin
 
     - rust: stable
+      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
     - env: TARGET_TO_TEST=i686-unknown-linux-gnu
       addons:
         apt:
@@ -84,13 +86,15 @@ matrix:
             - gcc-mingw-w64-i686
 
     - rust: beta
+      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
     - rust: nightly
+      env: TARGET_TO_TEST=x86_64-unknown-linux-gnu
 
 install:
   - if [ ! -z "$TARGET_TO_TEST" ]; then rustup target add $TARGET_TO_TEST; fi
 
 script:
-  - cargo test
+  - cargo build --manifest-path testcrate/Cargo.toml --target $TARGET_TO_TEST
 
 notifications:
   email:
