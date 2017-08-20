@@ -31,5 +31,5 @@ test_script:
   - cargo run --release --target %TARGET% --manifest-path testcrate/Cargo.toml --bin test
   - cargo run --release --target %TARGET% --manifest-path testcrate/Cargo.toml --bin package
 
-after_build:
+after_test:
   - ps: Get-ChildItem .\*.tar.gz | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
