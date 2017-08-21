@@ -113,11 +113,6 @@ impl Build {
                 configure.arg("no-shared");
             }
         } else {
-            // If we're *not* on MSVC then we can optimize our build a bit by
-            // avoiding building the CLI tools. Unfortunately though on MSVC if
-            // we pass this option the build breaks oddly...
-            configure.arg("no-stdio");
-
             // Never shared on non-MSVC
             configure.arg("no-shared");
         }
