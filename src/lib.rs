@@ -233,6 +233,8 @@ impl Build {
             vec!["ssl".to_string(), "crypto".to_string()]
         };
 
+        fs::remove_dir_all(&inner_dir).unwrap();
+
         Artifacts {
             lib_dir: install_dir.join("lib"),
             include_dir: install_dir.join("include"),
