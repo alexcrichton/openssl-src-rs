@@ -28,6 +28,8 @@ install:
   - rustc -vV
   - cargo -vV
 
+  - git submodule update --init
+
 build: false
 
 test_script:
