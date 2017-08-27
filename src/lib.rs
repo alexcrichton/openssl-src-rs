@@ -100,7 +100,11 @@ impl Build {
             // apparently but the whole point of this script is to produce a
             // "portable" implementation of OpenSSL, so shouldn't be any harm in
             // turning this off.
-            .arg("no-engine");
+            .arg("no-engine")
+
+            // MUSL doesn't implement some of the libc functions that the async
+            // stuff depends on, and we don't bind to any of that in any case.
+            .arg("no-async");
 
         if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files, but let's
