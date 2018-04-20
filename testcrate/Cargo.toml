@@ -6,7 +6,7 @@ authors = ["Alex Crichton <alex@alexcrichton.com>"]
 [dependencies]
 flate2 = "0.2"
 libc = "0.2"
-tar = "0.4"
+tar = { version = "0.4", default-features = false }
 
 [build-dependencies]
 openssl-src = { path = ".." }
