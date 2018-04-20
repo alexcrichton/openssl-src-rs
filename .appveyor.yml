@@ -8,10 +8,6 @@ environment:
     RUSTFLAGS: -C target-feature=-crt-static
   - TARGET: i686-pc-windows-msvc
     RUSTFLAGS: -C target-feature=+crt-static
-  - TARGET: i686-pc-windows-gnu
-    MSYS_BITS: 32
-  - TARGET: x86_64-pc-windows-gnu
-    MSYS_BITS: 64
 
 install:
   - appveyor-retry appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
