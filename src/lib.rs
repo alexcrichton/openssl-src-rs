@@ -215,7 +215,7 @@ impl Build {
 
             let mut install = gcc::windows_registry::find(target, "nmake.exe")
                 .expect("failed to find nmake");
-            install.arg("install").current_dir(&inner_dir);
+            install.arg("install_sw").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL");
         } else {
             let mut depend = Command::new("make");
@@ -227,7 +227,7 @@ impl Build {
             self.run_command(build, "building OpenSSL");
 
             let mut install = Command::new("make");
-            install.arg("install").current_dir(&inner_dir);
+            install.arg("install_sw").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL");
         }
 
