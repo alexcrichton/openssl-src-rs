@@ -247,6 +247,7 @@ impl Build {
     }
 
     fn run_command(&self, mut command: Command, desc: &str) {
+        println!("running {:?}", command);
         if let Some(ref path) = self.cross_sysroot {
             command.env("CROSS_SYSROOT", path);
         }
