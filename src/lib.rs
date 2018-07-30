@@ -179,12 +179,14 @@ impl Build {
             }
 
             // Make sure we pass extra flags like `-ffunction-sections` and
-            // other things like ARM codegen flags. For whatever reason
-            // `-static` on MUSL seems to cause issues...
+            // other things like ARM codegen flags.
             for arg in compiler.args() {
-                if target.contains("musl") && arg != "-static" {
-                    configure.arg(arg);
+                // For whatever reason `-static` on MUSL seems to cause
+                // issues...
+                if target.contains("musl") && arg == "-static" {
+                    continue
                 }
+                configure.arg(arg);
             }
 
             // Not really sure why, but on Android specifically the
