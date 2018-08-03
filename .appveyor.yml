@@ -30,7 +30,7 @@ build: false
 
 test_script:
   - cargo test --release --target %TARGET% --manifest-path testcrate/Cargo.toml
-  - cargo run --release --target %TARGET% --manifest-path testcrate/Cargo.toml --featues package
+  - cargo run --release --target %TARGET% --manifest-path testcrate/Cargo.toml --features package
 
 after_test:
   - ps: Get-ChildItem .\*.tar.gz | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
