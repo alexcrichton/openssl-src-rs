@@ -124,13 +124,6 @@ impl Build {
             configure.arg("no-shared");
         }
 
-        if target.contains("emscripten") || target == "wasm32-unknown-unknown" {
-            // Don't use stdio on emscripten, as it makes little sense and triggers compilation
-            // errors
-            configure.arg("no-stdio");
-            configure.arg("no-threads");
-        }
-
         let os = match target {
             "aarch64-linux-android" => "android64-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",

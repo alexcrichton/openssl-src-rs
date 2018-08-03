@@ -1,6 +1,9 @@
 language: rust
 dist: trusty
-sudo: false
+sudo: required
+
+services:
+  - docker
 
 env:
   global:
@@ -90,6 +93,7 @@ matrix:
         apt:
           packages:
             - gcc-mingw-w64-x86-64
+    - env: TARGET=asmjs-unknown-emscripten CMD=run DOCKER=tomaka/rustc-emscripten
 
     - rust: beta
       env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
@@ -100,7 +104,11 @@ install:
   - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
-  - cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
+  - if [ -z "$DOCKER" ]; then
+      cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
+    else
+      docker run --rm -it -v `pwd`:/usr/code -w /usr/code $DOCKER cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
+    fi
 
 notifications:
   email:
