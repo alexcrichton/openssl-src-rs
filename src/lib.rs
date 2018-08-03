@@ -89,6 +89,9 @@ impl Build {
             // No need to build tests, we won't run them anyway
             .arg("no-unit-test")
 
+            // No need for CLI tools
+            .arg("no-ui")
+
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
@@ -121,6 +124,13 @@ impl Build {
             configure.arg("no-shared");
         }
 
+        if target.contains("emscripten") {
+            // Don't use stdio on emscripten, as it makes little sense and triggers compilation
+            // errors
+            configure.arg("no-stdio");
+            configure.arg("no-threads");
+        }
+
         let os = match target {
             "aarch64-linux-android" => "android64-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
@@ -128,6 +138,7 @@ impl Build {
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
+            "asmjs-unknown-emscripten" => "gcc",
             "i686-apple-darwin" => "darwin-i386-cc",
             "i686-linux-android" => "android-x86",
             "i686-pc-windows-gnu" => "mingw",
@@ -151,6 +162,7 @@ impl Build {
             "x86_64-unknown-linux-gnu" => "linux-x86_64",
             "x86_64-unknown-linux-musl" => "linux-x86_64",
             "x86_64-unknown-netbsd" => "BSD-x86_64",
+            "wasm32-unknown-emscripten" => "gcc",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
