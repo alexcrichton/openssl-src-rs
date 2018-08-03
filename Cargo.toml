@@ -9,5 +9,8 @@ description = """
 Source of OpenSSL and logic to build it.
 """
 
+[workspace]
+members = ['testcrate']
+
 [dependencies]
 gcc = "0.3"

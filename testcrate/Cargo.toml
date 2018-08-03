@@ -4,9 +4,16 @@ version = "0.1.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies]
-flate2 = "0.2"
 libc = "0.2"
-tar = { version = "0.4", default-features = false }
+flate2 = { version = "0.2", optional = true }
+tar = { version = "0.4", default-features = false, optional = true }
+
+[[bin]]
+name = 'package'
+required-features = ['package']
+
+[features]
+package = ['tar', 'flate2']
 
 [build-dependencies]
 openssl-src = { path = ".." }

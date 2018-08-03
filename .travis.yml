@@ -5,110 +5,36 @@ sudo: required
 services:
   - docker
 
-env:
-  global:
-    - CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc
-    - CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=aarch64-linux-android-gcc
-    - CARGO_TARGET_I686_LINUX_ANDROID_LINKER=i686-linux-android-gcc
-    - CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER=x86_64-linux-android-gcc
-    - CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABI_LINKER=arm-linux-gnueabi-gcc
-    - CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
-    - CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER=x86_64-w64-mingw32-gcc
-    - CARGO_TARGET_I686_PC_WINDOWS_GNU_LINKER=i686-w64-mingw32-gcc
-
 matrix:
   include:
     - env: TARGET=arm-linux-androideabi
-      before_install:
-        - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
-        - unzip -q android-ndk-r15b-linux-x86_64.zip
-        - android-ndk-r15b/build/tools/make_standalone_toolchain.py
-              --unified-headers
-              --install-dir $HOME/android/ndk
-              --arch arm
-              --api 24
-        - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=aarch64-linux-android
-      before_install:
-        - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
-        - unzip -q android-ndk-r15b-linux-x86_64.zip
-        - android-ndk-r15b/build/tools/make_standalone_toolchain.py
-              --unified-headers
-              --install-dir $HOME/android/ndk
-              --arch arm64
-              --api 24
-        - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=i686-linux-android
-      before_install:
-        - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
-        - unzip -q android-ndk-r15b-linux-x86_64.zip
-        - android-ndk-r15b/build/tools/make_standalone_toolchain.py
-              --unified-headers
-              --install-dir $HOME/android/ndk
-              --arch x86
-              --api 24
-        - export PATH=$PATH:$HOME/android/ndk/bin
     - env: TARGET=x86_64-linux-android
-      before_install:
-        - curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
-        - unzip -q android-ndk-r15b-linux-x86_64.zip
-        - android-ndk-r15b/build/tools/make_standalone_toolchain.py
-              --unified-headers
-              --install-dir $HOME/android/ndk
-              --arch x86_64
-              --api 24
-        - export PATH=$PATH:$HOME/android/ndk/bin
 
     - os: osx
-      env: TARGET=x86_64-apple-darwin NO_ADD=1 CMD=run
+      env: TARGET=x86_64-apple-darwin NO_ADD=1
     - os: osx
-      env: TARGET=i686-apple-darwin CMD=run
+      env: TARGET=i686-apple-darwin
 
-    - rust: stable
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
-    - env: TARGET=i686-unknown-linux-gnu CMD=run
-      addons:
-        apt:
-          packages:
-            - gcc-multilib
+    - env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
+    - env: TARGET=i686-unknown-linux-gnu
     - env: TARGET=arm-unknown-linux-gnueabi
-      addons:
-        apt:
-          packages:
-            - gcc-arm-linux-gnueabi
-            - libc6-dev-armel-cross
     - env: TARGET=aarch64-unknown-linux-gnu
-      addons:
-        apt:
-          packages:
-            - gcc-aarch64-linux-gnu
-            - libc6-dev-arm64-cross
-    - env: TARGET=x86_64-unknown-linux-musl CMD=run
-      addons:
-        apt:
-          packages:
-            - musl-tools
+    - env: TARGET=x86_64-unknown-linux-musl
     - env: TARGET=x86_64-pc-windows-gnu
-      addons:
-        apt:
-          packages:
-            - gcc-mingw-w64-x86-64
-    - env: TARGET=asmjs-unknown-emscripten CMD=run DOCKER=tomaka/rustc-emscripten
+    - env: TARGET=asmjs-unknown-emscripten
 
     - rust: beta
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
     - rust: nightly
-      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1 CMD=run
+      env: TARGET=x86_64-unknown-linux-gnu NO_ADD=1
 
 install:
   - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
-  - if [ -z "$DOCKER" ]; then
-      cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
-    else
-      docker run --rm -it -v `pwd`:/usr/code -w /usr/code $DOCKER cargo "${CMD:-build}" --manifest-path testcrate/Cargo.toml --target $TARGET --bin test
-    fi
+  - ./ci/run-docker.sh $TARGET
 
 notifications:
   email:
