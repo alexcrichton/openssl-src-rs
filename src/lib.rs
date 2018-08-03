@@ -124,7 +124,7 @@ impl Build {
             configure.arg("no-shared");
         }
 
-        if target.contains("emscripten") {
+        if target.contains("emscripten") || target == "wasm32-unknown-unknown" {
             // Don't use stdio on emscripten, as it makes little sense and triggers compilation
             // errors
             configure.arg("no-stdio");
@@ -163,6 +163,7 @@ impl Build {
             "x86_64-unknown-linux-musl" => "linux-x86_64",
             "x86_64-unknown-netbsd" => "BSD-x86_64",
             "wasm32-unknown-emscripten" => "gcc",
+            "wasm32-unknown-unknown" => "gcc",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
