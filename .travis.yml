@@ -34,6 +34,7 @@ install:
   - if [ -z "$NO_ADD" ]; then rustup target add $TARGET; fi
 
 script:
+  - cargo generate-lockfile
   - ./ci/run-docker.sh $TARGET
 
 notifications:
