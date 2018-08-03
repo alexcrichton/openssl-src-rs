@@ -235,6 +235,11 @@ impl Build {
 
             let mut build = Command::new("make");
             build.current_dir(&inner_dir);
+            if !cfg!(windows) {
+                if let Some(s) = env::var_os("CARGO_MAKEFLAGS") {
+                    build.env("MAKEFLAGS", s);
+                }
+            }
             self.run_command(build, "building OpenSSL");
 
             let mut install = Command::new("make");
