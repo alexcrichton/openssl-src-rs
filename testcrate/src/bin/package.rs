@@ -12,7 +12,7 @@ fn main() {
                        read("openssl-src-version"),
                        read("target"));
     let out = File::create(format!("{}.tar.gz", name)).unwrap();
-    let out = flate2::write::GzEncoder::new(out, flate2::Compression::Best);
+    let out = flate2::write::GzEncoder::new(out, flate2::Compression::best());
     let mut builder = Builder::new(out);
     builder.append_dir_all(format!("{}/include", name), read("include")).unwrap();
     builder.append_dir_all(format!("{}/lib", name), read("lib")).unwrap();
