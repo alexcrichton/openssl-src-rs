@@ -1,4 +1,4 @@
-extern crate gcc;
+extern crate cc;
 
 use std::env;
 use std::fs;
@@ -167,12 +167,12 @@ impl Build {
         // whatnot. Note that this doesn't happen on MSVC b/c things are pretty
         // different there and this isn't needed most of the time anyway.
         if !target.contains("msvc") {
-            let mut gcc = gcc::Build::new();
-            gcc.target(target)
+            let mut cc = cc::Build::new();
+            cc.target(target)
                 .host(host)
                 .warnings(false)
                 .opt_level(2);
-            let compiler = gcc.get_compiler();
+            let compiler = cc.get_compiler();
             configure.env("CC", compiler.path());
             let path = compiler.path().to_str().unwrap();
 
@@ -220,12 +220,12 @@ impl Build {
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
         if target.contains("msvc") {
-            let mut build = gcc::windows_registry::find(target, "nmake.exe")
+            let mut build = cc::windows_registry::find(target, "nmake.exe")
                 .expect("failed to find nmake");
             build.current_dir(&inner_dir);
             self.run_command(build, "building OpenSSL");
 
-            let mut install = gcc::windows_registry::find(target, "nmake.exe")
+            let mut install = cc::windows_registry::find(target, "nmake.exe")
                 .expect("failed to find nmake");
             install.arg("install_sw").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL");
