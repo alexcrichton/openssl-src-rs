@@ -13,4 +13,4 @@ Source of OpenSSL and logic to build it.
 members = ['testcrate']
 
 [dependencies]
-gcc = "0.3"
+cc = "1.0"
