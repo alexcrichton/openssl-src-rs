@@ -193,6 +193,33 @@ impl Build {
                 configure.arg(arg);
             }
 
+            if target == "x86_64-pc-windows-gnu" {
+                // For whatever reason OpenSSL 1.1.1 fails to build on
+                // `x86_64-pc-windows-gnu` in our docker container due to an
+                // error about "too many sections". Having no idea what this
+                // error is about some quick googling yields
+                // https://github.com/cginternals/glbinding/issues/135 which
+                // mysteriously mentions `-Wa,-mbig-obj`, passing a new argument
+                // to the assembler. Now I have no idea what `-mbig-obj` does
+                // for Windows nor why it would matter, but it does seem to fix
+                // compilation issues.
+                //
+                // Note that another entirely unrelated issue -
+                // https://github.com/assimp/assimp/issues/177 - was fixed by
+                // splitting a large file, so presumably OpenSSL has a large
+                // file soemwhere in it? Who knows!
+                configure.arg("-Wa,-mbig-obj");
+
+                // As of OpenSSL 1.1.1 the build system is now trying to execute
+                // `windres` which doesn't exist when we're cross compiling from
+                // Linux, so we may need to instruct it manually to know what
+                // executable to run.
+                if path.ends_with("-gcc") {
+                    let windres = format!("{}-windres", &path[..path.len() - 4]);
+                    configure.env("WINDRES", &windres);
+                }
+            }
+
             // Not really sure why, but on Android specifically the
             // CROSS_SYSROOT variable needs to be set. The build system will
             // pass `--sysroot=$(CROSS_SYSROOT)` so we need to make sure that's
