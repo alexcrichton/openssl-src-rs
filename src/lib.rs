@@ -220,6 +220,16 @@ impl Build {
                 }
             }
 
+            if target.contains("emscripten") {
+                // As of OpenSSL 1.1.1 the source apparently wants to include
+                // `stdatomic.h`, but this doesn't exist on Emscripten. After
+                // reading OpenSSL's source where the error is, we define this
+                // magical (and probably
+                // compiler-internal-should-not-be-user-defined) macro to say
+                // "no atomics are available" and avoid including such a header.
+                configure.arg("-D__STDC_NO_ATOMICS__");
+            }
+
             // Not really sure why, but on Android specifically the
             // CROSS_SYSROOT variable needs to be set. The build system will
             // pass `--sysroot=$(CROSS_SYSROOT)` so we need to make sure that's
