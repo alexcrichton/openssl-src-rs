@@ -89,9 +89,6 @@ impl Build {
             // No need to build tests, we won't run them anyway
             .arg("no-unit-test")
 
-            // No need for CLI tools
-            .arg("no-ui")
-
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
