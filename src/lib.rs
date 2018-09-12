@@ -232,6 +232,11 @@ impl Build {
                 // "no atomics are available" and avoid including such a header.
                 configure.arg("-D__STDC_NO_ATOMICS__");
             }
+
+            if target.contains("musl") {
+                // Hack around openssl/openssl#7207 for now
+                configure.arg("-DOPENSSL_NO_SECURE_MEMORY");
+            }
         }
 
         // And finally, run the perl configure script!
