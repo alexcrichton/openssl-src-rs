@@ -17,7 +17,6 @@ pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
     host: Option<String>,
-    cross_sysroot: Option<PathBuf>,
 }
 
 pub struct Artifacts {
@@ -34,7 +33,6 @@ impl Build {
             }),
             target: env::var("TARGET").ok(),
             host: env::var("HOST").ok(),
-            cross_sysroot: None,
         }
     }
 
@@ -122,16 +120,21 @@ impl Build {
         }
 
         let os = match target {
-            "aarch64-linux-android" => "android64-aarch64",
+            // Note that this, and all other android targets, aren't using the
+            // `android64-aarch64` (or equivalent) builtin target. That
+            // apparently has a crazy amount of build logic in OpenSSL 1.1.1
+            // that bypasses basically everything `cc` does, so let's just cop
+            // out and say it's linux and hope it works.
+            "aarch64-linux-android" => "linux-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
-            "arm-linux-androideabi" => "android-armeabi",
+            "arm-linux-androideabi" => "linux-armv4",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-musleabihf" => "linux-armv4",
             "asmjs-unknown-emscripten" => "gcc",
             "i686-apple-darwin" => "darwin-i386-cc",
-            "i686-linux-android" => "android-x86",
+            "i686-linux-android" => "linux-elf",
             "i686-pc-windows-gnu" => "mingw",
             "i686-pc-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
@@ -146,7 +149,7 @@ impl Build {
             "powerpc64le-unknown-linux-gnu" => "linux-ppc64le",
             "s390x-unknown-linux-gnu" => "linux64-s390x",
             "x86_64-apple-darwin" => "darwin64-x86_64-cc",
-            "x86_64-linux-android" => "android64",
+            "x86_64-linux-android" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
@@ -229,22 +232,6 @@ impl Build {
                 // "no atomics are available" and avoid including such a header.
                 configure.arg("-D__STDC_NO_ATOMICS__");
             }
-
-            // Not really sure why, but on Android specifically the
-            // CROSS_SYSROOT variable needs to be set. The build system will
-            // pass `--sysroot=$(CROSS_SYSROOT)` so we need to make sure that's
-            // set to something. By default we infer it as next to the `bin`
-            // directory containing the compiler itself.
-            if target.contains("android") && self.cross_sysroot.is_none() {
-                for path in env::split_paths(&env::var_os("PATH").unwrap()) {
-                    if !path.join(compiler.path()).exists() {
-                        continue
-                    }
-                    let path = path.parent().unwrap(); // chop off 'bin'
-                    self.cross_sysroot = Some(path.join("sysroot"));
-                    break
-                }
-            }
         }
 
         // And finally, run the perl configure script!
@@ -299,9 +286,6 @@ impl Build {
 
     fn run_command(&self, mut command: Command, desc: &str) {
         println!("running {:?}", command);
-        if let Some(ref path) = self.cross_sysroot {
-            command.env("CROSS_SYSROOT", path);
-        }
         let status = command.status().unwrap();
         if !status.success() {
             panic!("
