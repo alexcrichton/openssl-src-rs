@@ -34,3 +34,7 @@ test_script:
 
 after_test:
   - ps: Get-ChildItem .\*.tar.gz | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
+
+branches:
+  only:
+    - master
