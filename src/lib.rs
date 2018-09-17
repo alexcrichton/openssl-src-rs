@@ -17,7 +17,6 @@ pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
     host: Option<String>,
-    cross_sysroot: Option<PathBuf>,
 }
 
 pub struct Artifacts {
@@ -34,7 +33,6 @@ impl Build {
             }),
             target: env::var("TARGET").ok(),
             host: env::var("HOST").ok(),
-            cross_sysroot: None,
         }
     }
 
@@ -89,9 +87,6 @@ impl Build {
             // No need to build tests, we won't run them anyway
             .arg("no-unit-test")
 
-            // No need for CLI tools
-            .arg("no-ui")
-
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
@@ -125,16 +120,21 @@ impl Build {
         }
 
         let os = match target {
-            "aarch64-linux-android" => "android64-aarch64",
+            // Note that this, and all other android targets, aren't using the
+            // `android64-aarch64` (or equivalent) builtin target. That
+            // apparently has a crazy amount of build logic in OpenSSL 1.1.1
+            // that bypasses basically everything `cc` does, so let's just cop
+            // out and say it's linux and hope it works.
+            "aarch64-linux-android" => "linux-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
-            "arm-linux-androideabi" => "android-armeabi",
+            "arm-linux-androideabi" => "linux-armv4",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-musleabihf" => "linux-armv4",
             "asmjs-unknown-emscripten" => "gcc",
             "i686-apple-darwin" => "darwin-i386-cc",
-            "i686-linux-android" => "android-x86",
+            "i686-linux-android" => "linux-elf",
             "i686-pc-windows-gnu" => "mingw",
             "i686-pc-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
@@ -149,7 +149,7 @@ impl Build {
             "powerpc64le-unknown-linux-gnu" => "linux-ppc64le",
             "s390x-unknown-linux-gnu" => "linux64-s390x",
             "x86_64-apple-darwin" => "darwin64-x86_64-cc",
-            "x86_64-linux-android" => "android64",
+            "x86_64-linux-android" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
@@ -196,20 +196,46 @@ impl Build {
                 configure.arg(arg);
             }
 
-            // Not really sure why, but on Android specifically the
-            // CROSS_SYSROOT variable needs to be set. The build system will
-            // pass `--sysroot=$(CROSS_SYSROOT)` so we need to make sure that's
-            // set to something. By default we infer it as next to the `bin`
-            // directory containing the compiler itself.
-            if target.contains("android") && self.cross_sysroot.is_none() {
-                for path in env::split_paths(&env::var_os("PATH").unwrap()) {
-                    if !path.join(compiler.path()).exists() {
-                        continue
-                    }
-                    let path = path.parent().unwrap(); // chop off 'bin'
-                    self.cross_sysroot = Some(path.join("sysroot"));
-                    break
+            if target == "x86_64-pc-windows-gnu" {
+                // For whatever reason OpenSSL 1.1.1 fails to build on
+                // `x86_64-pc-windows-gnu` in our docker container due to an
+                // error about "too many sections". Having no idea what this
+                // error is about some quick googling yields
+                // https://github.com/cginternals/glbinding/issues/135 which
+                // mysteriously mentions `-Wa,-mbig-obj`, passing a new argument
+                // to the assembler. Now I have no idea what `-mbig-obj` does
+                // for Windows nor why it would matter, but it does seem to fix
+                // compilation issues.
+                //
+                // Note that another entirely unrelated issue -
+                // https://github.com/assimp/assimp/issues/177 - was fixed by
+                // splitting a large file, so presumably OpenSSL has a large
+                // file soemwhere in it? Who knows!
+                configure.arg("-Wa,-mbig-obj");
+
+                // As of OpenSSL 1.1.1 the build system is now trying to execute
+                // `windres` which doesn't exist when we're cross compiling from
+                // Linux, so we may need to instruct it manually to know what
+                // executable to run.
+                if path.ends_with("-gcc") {
+                    let windres = format!("{}-windres", &path[..path.len() - 4]);
+                    configure.env("WINDRES", &windres);
                 }
+            }
+
+            if target.contains("emscripten") {
+                // As of OpenSSL 1.1.1 the source apparently wants to include
+                // `stdatomic.h`, but this doesn't exist on Emscripten. After
+                // reading OpenSSL's source where the error is, we define this
+                // magical (and probably
+                // compiler-internal-should-not-be-user-defined) macro to say
+                // "no atomics are available" and avoid including such a header.
+                configure.arg("-D__STDC_NO_ATOMICS__");
+            }
+
+            if target.contains("musl") {
+                // Hack around openssl/openssl#7207 for now
+                configure.arg("-DOPENSSL_NO_SECURE_MEMORY");
             }
         }
 
@@ -265,9 +291,6 @@ impl Build {
 
     fn run_command(&self, mut command: Command, desc: &str) {
         println!("running {:?}", command);
-        if let Some(ref path) = self.cross_sysroot {
-            command.env("CROSS_SYSROOT", path);
-        }
         let status = command.status().unwrap();
         if !status.success() {
             panic!("
