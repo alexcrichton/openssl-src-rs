@@ -104,6 +104,15 @@ impl Build {
             // stuff depends on, and we don't bind to any of that in any case.
             .arg("no-async");
 
+        // We ideally don't need stdio functions as they're not too heavily used
+        // in Rust, but for whatever reason the build fails if we pass this on
+        // Windows:
+        //
+        // https://ci.appveyor.com/project/alexcrichton/openssl-src-rs/build/1.0.91/job/rusa13s5ijvoeh2m
+        if !target.contains("windows") {
+            configure.arg("no-stdio");
+        }
+
         if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files, but let's
             // just pessimistically assume for now that's not available.
