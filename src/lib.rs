@@ -137,6 +137,7 @@ impl Build {
             "aarch64-linux-android" => "linux-aarch64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
             "arm-linux-androideabi" => "linux-armv4",
+            "armv7-linux-androideabi" => "linux-armv4",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
