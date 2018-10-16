@@ -8,6 +8,13 @@ repository = "https://github.com/alexcrichton/openssl-src-rs"
 description = """
 Source of OpenSSL and logic to build it.
 """
+exclude = [
+  'openssl/boringssl/*',
+  'openssl/fuzz/*',
+  'openssl/krb5/*',
+  'openssl/pyca-cryptography/*',
+  'openssl/test/*',
+]
 
 [workspace]
 members = ['testcrate']
