@@ -104,12 +104,10 @@ impl Build {
             // stuff depends on, and we don't bind to any of that in any case.
             .arg("no-async");
 
-        // We ideally don't need stdio functions as they're not too heavily used
-        // in Rust, but for whatever reason the build fails if we pass this on
-        // Windows:
-        //
-        // https://ci.appveyor.com/project/alexcrichton/openssl-src-rs/build/1.0.91/job/rusa13s5ijvoeh2m
-        if !target.contains("windows") {
+        // On Android it looks like not passing no-stdio may cause a build
+        // failure (#13), but most other platforms need it for things like
+        // loading system certificates so only disable it on Android.
+        if target.contains("android") {
             configure.arg("no-stdio");
         }
 
