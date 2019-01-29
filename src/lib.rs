@@ -228,15 +228,15 @@ impl Build {
                 // splitting a large file, so presumably OpenSSL has a large
                 // file soemwhere in it? Who knows!
                 configure.arg("-Wa,-mbig-obj");
+            }
 
+            if target.contains("pc-windows-gnu") && path.ends_with("-gcc") {
                 // As of OpenSSL 1.1.1 the build system is now trying to execute
                 // `windres` which doesn't exist when we're cross compiling from
                 // Linux, so we may need to instruct it manually to know what
                 // executable to run.
-                if path.ends_with("-gcc") {
-                    let windres = format!("{}-windres", &path[..path.len() - 4]);
-                    configure.env("WINDRES", &windres);
-                }
+                let windres = format!("{}-windres", &path[..path.len() - 4]);
+                configure.env("WINDRES", &windres);
             }
 
             if target.contains("emscripten") {
