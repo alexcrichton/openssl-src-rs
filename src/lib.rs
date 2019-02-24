@@ -54,6 +54,7 @@ impl Build {
     fn cmd_make(&self) -> Command {
         match &self.host.as_ref().expect("HOST dir not set")[..] {
             "x86_64-unknown-dragonfly" => Command::new("gmake"),
+            "x86_64-unknown-freebsd" => Command::new("gmake"),
             _ => Command::new("make"),
         }
     }
