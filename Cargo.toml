@@ -1,6 +1,6 @@
 [package]
 name = "openssl-src"
-version = "111.1.1+1.1.1a"
+version = "111.2.1+1.1.1b"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
