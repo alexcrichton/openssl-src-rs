@@ -81,6 +81,8 @@ impl Build {
         configure.arg("./Configure");
         if target.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
+        } else if target.contains("mipsel-unknown-linux-gnu") {
+            configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
         }
