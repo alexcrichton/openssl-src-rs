@@ -1,4 +1,7 @@
 steps:
+  - bash: echo $PATH && which -a perl
+    condition: eq( variables['Agent.OS'], 'Windows_NT' )
+
   - checkout: self
     submodules: true
 
