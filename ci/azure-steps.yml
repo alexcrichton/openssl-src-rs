@@ -1,0 +1,22 @@
+steps:
+  - checkout: self
+    submodules: true
+
+  - template: azure-install-rust.yml
+
+  - bash: rustup target add $TARGET
+    displayName: Install Rust target
+
+  - bash: cargo generate-lockfile && ./ci/run-docker.sh $TARGET
+    displayName: Run test script
+
+  - bash: cargo run --release --target $TARGET --manifest-path testcrate/Cargo.toml --features package
+    condition: ne( variables['Agent.OS'], 'Windows_NT' )
+    displayName: Build Windows package
+
+  - task: PublishPipelineArtifact@0
+    condition: ne( variables['Agent.OS'], 'Windows_NT' )
+    displayName: Push Windows package
+    inputs:
+      artifactName: test
+      targetPath: '*.tar.gz'
