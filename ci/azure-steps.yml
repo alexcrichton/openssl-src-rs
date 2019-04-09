@@ -11,11 +11,11 @@ steps:
     displayName: Run test script
 
   - bash: cargo run --release --target $TARGET --manifest-path testcrate/Cargo.toml --features package
-    condition: ne( variables['Agent.OS'], 'Windows_NT' )
+    condition: eq( variables['Agent.OS'], 'Windows_NT' )
     displayName: Build Windows package
 
   - task: PublishPipelineArtifact@0
-    condition: ne( variables['Agent.OS'], 'Windows_NT' )
+    condition: eq( variables['Agent.OS'], 'Windows_NT' )
     displayName: Push Windows package
     inputs:
       artifactName: test
