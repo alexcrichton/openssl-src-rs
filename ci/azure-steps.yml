@@ -1,5 +1,7 @@
 steps:
-  - bash: echo $PATH && which -a perl
+  - script: |
+      echo ##vso[task.prependpath]C:\Strawberry\perl\bin
+    displayName: Use strawberry perl
     condition: eq( variables['Agent.OS'], 'Windows_NT' )
 
   - checkout: self
@@ -10,15 +12,19 @@ steps:
   - bash: rustup target add $TARGET
     displayName: Install Rust target
 
-  - bash: cargo generate-lockfile && ./ci/run-docker.sh $TARGET
-    displayName: Run test script
+  - script: cargo generate-lockfile && ./ci/run-docker.sh $TARGET
+    condition: and( ne( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
+    displayName: Run test script (unix)
 
-  - bash: cargo run --release --target $TARGET --manifest-path testcrate/Cargo.toml --features package
-    condition: eq( variables['Agent.OS'], 'Windows_NT' )
-    displayName: Build Windows package
+  - script: |
+      cargo test --manifest-path testcrate/Cargo.toml --target %TARGET%
+      cargo test --manifest-path testcrate/Cargo.toml --target %TARGET% --release
+      cargo run --release --target $TARGET --manifest-path testcrate/Cargo.toml --features package
+    condition: and( eq( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
+    displayName: Run test script (windows)
 
   - task: PublishPipelineArtifact@0
-    condition: eq( variables['Agent.OS'], 'Windows_NT' )
+    condition: and( eq( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
     displayName: Push Windows package
     inputs:
       artifactName: test
