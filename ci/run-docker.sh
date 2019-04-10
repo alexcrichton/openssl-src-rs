@@ -15,8 +15,6 @@ docker build \
 
 docker run \
   --rm \
-  --interactive \
-  --tty \
   --volume `rustc --print sysroot`:/rust:ro \
   --volume `pwd`:/usr/code:ro \
   --volume `pwd`/target:/usr/code/target \

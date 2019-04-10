@@ -1,0 +1,33 @@
+steps:
+  - script: |
+    displayName: Use strawberry perl
+    condition: eq( variables['Agent.OS'], 'Windows_NT' )
+
+  - checkout: self
+    submodules: true
+
+  - template: azure-install-rust.yml
+
+  - bash: rustup target add $TARGET
+    displayName: Install Rust target
+
+  - script: cargo generate-lockfile && ./ci/run-docker.sh $TARGET
+    condition: and( ne( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
+    displayName: Run test script (unix)
+
+  - bash: |
+      set -e
+      export PATH="/c/Strawberry/perl/bin:$PATH"
+      cargo test --manifest-path testcrate/Cargo.toml --target $TARGET
+      cargo test --manifest-path testcrate/Cargo.toml --target $TARGET --release
+      cargo run --release --target $TARGET --manifest-path testcrate/Cargo.toml --features package
+      mv *.tar.gz release.tar.gz
+    condition: and( eq( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
+    displayName: Run test script (windows)
+
+  - task: PublishPipelineArtifact@0
+    condition: and( eq( variables['Agent.OS'], 'Windows_NT' ), succeeded() )
+    displayName: Push Windows package
+    inputs:
+      artifactName: '$(NAME)'
+      targetPath: 'release.tar.gz'
