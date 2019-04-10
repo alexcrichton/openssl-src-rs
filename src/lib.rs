@@ -331,6 +331,13 @@ fn cp_r(src: &Path, dst: &Path) {
         let f = f.unwrap();
         let path = f.path();
         let name = path.file_name().unwrap();
+
+        // Skip git metadata as it's been known to cause issues (#26) and
+        // otherwise shouldn't be required
+        if name.to_str() == Some(".git") {
+            continue
+        }
+
         let dst = dst.join(name);
         if f.file_type().unwrap().is_dir() {
             fs::create_dir_all(&dst).unwrap();
