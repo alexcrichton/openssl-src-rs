@@ -327,6 +327,8 @@ Error {}:
 }
 
 fn cp_r(src: &Path, dst: &Path) {
+    let src = &src.canonicalize().unwrap();
+    let dst = &dst.canonicalize().unwrap();
     for f in fs::read_dir(src).unwrap() {
         let f = f.unwrap();
         let path = f.path();
