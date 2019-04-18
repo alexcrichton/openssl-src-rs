@@ -79,10 +79,7 @@ impl Build {
 
         let mut configure = Command::new("perl");
         configure.arg("./Configure");
-        if target.contains("pc-windows-gnu") {
-            configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
-        } else if host.contains("pc-windows-gnu")
-            && target.starts_with("mips") && target.contains("gnu") {
+        if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
