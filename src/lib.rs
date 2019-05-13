@@ -146,6 +146,8 @@ impl Build {
             "armv7-linux-androideabi" => "linux-armv4",
             "arm-unknown-linux-gnueabi" => "linux-armv4",
             "arm-unknown-linux-gnueabihf" => "linux-armv4",
+            "arm-unknown-linux-musleabi" => "linux-armv4",
+            "arm-unknown-linux-musleabihf" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-musleabihf" => "linux-armv4",
             "asmjs-unknown-emscripten" => "gcc",
