@@ -1,7 +1,8 @@
 extern crate cc;
 
 use std::env;
-use std::fs;
+use std::io::{Read, Write};
+use std::fs::{self, File};
 use std::path::{PathBuf, Path};
 use std::process::Command;
 
@@ -76,6 +77,7 @@ impl Build {
         let inner_dir = build_dir.join("src");
         fs::create_dir_all(&inner_dir).unwrap();
         cp_r(&source_dir(), &inner_dir);
+        apply_patches(target, &inner_dir);
 
         let mut configure = Command::new("perl");
         configure.arg("./Configure");
@@ -349,6 +351,22 @@ fn cp_r(src: &Path, dst: &Path) {
             fs::copy(&path, &dst).unwrap();
         }
     }
+}
+
+fn apply_patches(target: &str, inner: &Path) {
+    if !target.contains("musl") {
+        return;
+    }
+
+    // Undo part of https://github.com/openssl/openssl/commit/c352bd07ed2ff872876534c950a6968d75ef121e on MUSL
+    // since it doesn't have asm/unistd.h
+    let mut buf = String::new();
+    let path = inner.join("crypto/rand/rand_unix.c");
+    File::open(&path).unwrap().read_to_string(&mut buf).unwrap();
+
+    let buf = buf.replace("asm/unistd.h", "sys/syscall.h").replace("__NR_getrandom", "SYS_getrandom");
+
+    File::create(&path).unwrap().write_all(buf.as_bytes()).unwrap();
 }
 
 fn sanitize_sh(path: &Path) -> String {
