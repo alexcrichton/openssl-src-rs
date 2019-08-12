@@ -119,7 +119,6 @@ impl Build {
         // loading system certificates so only disable it on Android.
         if target.contains("android") {
             configure.arg("no-stdio");
-            //configure.arg("no-ui-console");
         }
 
         if target.contains("msvc") {
