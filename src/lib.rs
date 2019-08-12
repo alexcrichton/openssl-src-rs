@@ -119,6 +119,7 @@ impl Build {
         // loading system certificates so only disable it on Android.
         if target.contains("android") {
             configure.arg("no-stdio");
+            //configure.arg("no-ui-console");
         }
 
         if target.contains("msvc") {
@@ -185,6 +186,8 @@ impl Build {
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
+        let mut ios_isysroot: std::option::Option<String> = None;
+
         configure.arg(os);
 
         // If we're not on MSVC we configure cross compilers and cross tools and
@@ -211,12 +214,39 @@ impl Build {
 
             // Make sure we pass extra flags like `-ffunction-sections` and
             // other things like ARM codegen flags.
+            let mut skip_next = false;
+            let mut is_isysroot = false;
             for arg in compiler.args() {
                 // For whatever reason `-static` on MUSL seems to cause
                 // issues...
                 if target.contains("musl") && arg == "-static" {
                     continue
                 }
+
+                // cargo-lipo specifies this but OpenSSL complains
+                if target.contains("apple-ios") {
+                    if arg == "-arch" {
+                        skip_next = true;
+                        continue
+                    }
+
+                    if arg == "-isysroot" {
+                        is_isysroot = true;
+                        continue
+                    }
+
+                    if is_isysroot {
+                        is_isysroot = false;
+                        ios_isysroot = Some(arg.to_str().unwrap().to_string());
+                        continue
+                    }
+                }
+
+                if skip_next {
+                    skip_next = false;
+                    continue
+                }
+
                 configure.arg(arg);
             }
 
@@ -291,6 +321,13 @@ impl Build {
                     build.env("MAKEFLAGS", s);
                 }
             }
+
+            if let Some(ref isysr) = ios_isysroot {
+                let components: Vec<&str> = isysr.split("/SDKs/").collect();
+                build.env("CROSS_TOP", components[0]);
+                build.env("CROSS_SDK", components[1]);
+            }
+
             self.run_command(build, "building OpenSSL");
 
             let mut install = self.cmd_make();
