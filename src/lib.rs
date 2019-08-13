@@ -182,6 +182,7 @@ impl Build {
             "wasm32-unknown-emscripten" => "gcc",
             "wasm32-unknown-unknown" => "gcc",
             "aarch64-apple-ios" => "ios64-cross",
+            "x86_64-apple-ios" => "iossimulator-xcrun",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
@@ -247,6 +248,12 @@ impl Build {
                 }
 
                 configure.arg(arg);
+            }
+
+            if os.contains("iossimulator") {
+                if let Some(ref isysr) = ios_isysroot {
+                    configure.env("CC", &format!("xcrun -sdk iphonesimulator cc -isysroot {}", sanitize_sh(&Path::new(isysr))));
+                }
             }
 
             if target == "x86_64-pc-windows-gnu" {
