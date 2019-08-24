@@ -4,7 +4,6 @@ This crate contains the logic to build OpenSSL and is intended to be consumed by
 the `openssl-sys` crate. You likely in theory aren't interacting with this too
 much!
 
-
 # License
 
 This project is licensed under either of
