@@ -192,6 +192,11 @@ impl Build {
             configure.env("CC", compiler.path());
             let path = compiler.path().to_str().unwrap();
 
+            // Both `cc::Build` and `./Configure` take into account
+            // `CROSS_COMPILE` environment variable. So to avoid double
+            // prefix, we unset `CROSS_COMPILE` for `./Configure`.
+            configure.env_remove("CROSS_COMPILE");
+
             // Infer ar/ranlib tools from cross compilers if the it looks like
             // we're doing something like `foo-gcc` route that to `foo-ranlib`
             // as well.
