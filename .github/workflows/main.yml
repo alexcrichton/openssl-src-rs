@@ -113,16 +113,16 @@ jobs:
     - name: Install Rust (macos)
       run: |
         curl https://sh.rustup.rs | sh -s -- -y
-        echo "##[add-path]$HOME/.cargo/bin"
+        echo ::add-path::$HOME/.cargo/bin
       if: matrix.os == 'macos-latest'
     - run: rustup target add ${{ matrix.target }}
     - name: Set crt-static
       if: matrix.crt_static == 'yes'
-      run: echo "##[set-env name=RUSTFLAGS]-Ctarget-feature=+crt-static"
+      run: echo ::set-env name=RUSTFLAGS::-Ctarget-feature=+crt-static
       shell: bash
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
-      run: echo "##[add-path]C:/Strawberry/perl/bin"
+      run: echo ::add-path::C:/Strawberry/perl/bin
       shell: bash
     - run: |
         set -e
@@ -131,13 +131,12 @@ jobs:
       if: "!startsWith(matrix.os, 'windows')"
       name: Run tests (not Windows)
     - run: |
-        set -e
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }}
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package
       if: startsWith(matrix.os, 'windows')
       name: Run tests (Windows)
-      shell: bash
+      shell: cmd
 
   rustfmt:
     name: Rustfmt
