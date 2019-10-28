@@ -6,7 +6,6 @@ jobs:
     name: Test
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         thing:
         - stable
@@ -138,6 +137,7 @@ jobs:
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package
       if: startsWith(matrix.os, 'windows')
       name: Run tests (Windows)
+      shell: bash
 
   rustfmt:
     name: Rustfmt
