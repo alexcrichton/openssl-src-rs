@@ -20,4 +20,4 @@ RUN android-ndk-r15b/build/tools/make_standalone_toolchain.py \
 
 ENV PATH=$PATH:/android/ndk/bin \
   CARGO_TARGET_ARM_LINUX_ANDROIDEABI_LINKER=arm-linux-androideabi-gcc \
-  CARGO_TARGET_ARM_LINUX_ANDROIDEABI_RUNNER=true
+  CARGO_TARGET_ARM_LINUX_ANDROIDEABI_RUNNER=echo

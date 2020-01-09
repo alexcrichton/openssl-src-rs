@@ -20,4 +20,4 @@ RUN android-ndk-r15b/build/tools/make_standalone_toolchain.py \
 
 ENV PATH=$PATH:/android/ndk/bin \
   CARGO_TARGET_I686_LINUX_ANDROID_LINKER=i686-linux-android-gcc \
-  CARGO_TARGET_I686_LINUX_ANDROID_RUNNER=true
+  CARGO_TARGET_I686_LINUX_ANDROID_RUNNER=echo
