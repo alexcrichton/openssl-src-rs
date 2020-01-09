@@ -122,7 +122,7 @@ jobs:
       shell: bash
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
-      run: echo ::add-path::C:/Strawberry/perl/bin
+      run: echo ::set-env name=OPENSSL_SRC_PERL::C:/Strawberry/perl/bin/perl
       shell: bash
     - run: |
         set -e

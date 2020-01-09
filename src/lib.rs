@@ -77,7 +77,8 @@ impl Build {
         cp_r(&source_dir(), &inner_dir);
         apply_patches(target, &inner_dir);
 
-        let mut configure = Command::new("perl");
+        let perl_program = env::var("OPENSSL_SRC_PERL").unwrap_or(String::from("perl"));
+        let mut configure = Command::new(perl_program);
         configure.arg("./Configure");
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
