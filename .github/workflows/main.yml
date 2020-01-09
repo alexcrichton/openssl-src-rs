@@ -21,7 +21,7 @@ jobs:
         - aarch64-linux
         - x86_64-musl
         - x86_64-mingw
-        - asmjs
+        # - asmjs
         - i686-msvc
         - i686-msvc-static
         - x86_64-msvc
