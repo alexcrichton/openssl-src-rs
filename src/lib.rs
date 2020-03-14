@@ -54,6 +54,7 @@ impl Build {
         match &self.host.as_ref().expect("HOST dir not set")[..] {
             "x86_64-unknown-dragonfly" => Command::new("gmake"),
             "x86_64-unknown-freebsd" => Command::new("gmake"),
+            "x86_64-sun-solaris" => Command::new("gmake"),
             _ => Command::new("make"),
         }
     }
@@ -180,6 +181,7 @@ impl Build {
             "x86_64-unknown-linux-gnu" => "linux-x86_64",
             "x86_64-unknown-linux-musl" => "linux-x86_64",
             "x86_64-unknown-netbsd" => "BSD-x86_64",
+            "x86_64-sun-solaris" => "solaris64-x86_64-gcc",
             "wasm32-unknown-emscripten" => "gcc",
             "wasm32-unknown-unknown" => "gcc",
             "aarch64-apple-ios" => "ios64-cross",
