@@ -79,10 +79,10 @@ jobs:
           target: x86_64-pc-windows-gnu
           rust: stable
           os: ubuntu-latest
-        - thing: asmjs
-          target: asmjs-unknown-emscripten
-          rust: stable
-          os: ubuntu-latest
+        # - thing: asmjs
+        #   target: asmjs-unknown-emscripten
+        #   rust: stable
+        #   os: ubuntu-latest
         - thing: i686-msvc
           target: i686-pc-windows-msvc
           rust: stable-i686-msvc
