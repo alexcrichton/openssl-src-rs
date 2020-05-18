@@ -218,8 +218,12 @@ impl Build {
             // as well.
             if path.ends_with("-gcc") && !target.contains("unknown-linux-musl") {
                 let path = &path[..path.len() - 4];
-                configure.env("RANLIB", format!("{}-ranlib", path));
-                configure.env("AR", format!("{}-ar", path));
+                if env::var_os("RANLIB").is_none() {
+                    configure.env("RANLIB", format!("{}-ranlib", path));
+                }
+                if env::var_os("AR").is_none() {
+                    configure.env("AR", format!("{}-ar", path));
+                }
             }
 
             // Make sure we pass extra flags like `-ffunction-sections` and
