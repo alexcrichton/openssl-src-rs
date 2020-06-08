@@ -107,11 +107,7 @@ impl Build {
             // stuff depends on, and we don't bind to any of that in any case.
             .arg("no-async");
 
-        if target.contains("musl")
-            || target.contains("apple")
-            || target.contains("android")
-            || target.contains("windows")
-        {
+        if target.contains("musl") || target.contains("android") || target.contains("windows") {
             // This actually fails to compile on musl (it needs linux/version.h
             // right now) but we don't actually need this most of the time.
             configure.arg("no-engine");
