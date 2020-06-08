@@ -107,13 +107,9 @@ impl Build {
             // stuff depends on, and we don't bind to any of that in any case.
             .arg("no-async");
 
-        if !target.contains("x86_64-unknown-linux-gnu") {
+        if target.contains("musl") {
             // This actually fails to compile on musl (it needs linux/version.h
-            // right now) but we don't actually need this most of the time. This
-            // is intended for super-configurable backends and whatnot
-            // apparently but the whole point of this script is to produce a
-            // "portable" implementation of OpenSSL, so shouldn't be any harm in
-            // turning this off.
+            // right now) but we don't actually need this most of the time.
             configure.arg("no-engine");
         }
 
