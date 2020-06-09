@@ -102,15 +102,19 @@ impl Build {
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
-            .arg("no-zlib-dynamic")
-            // MUSL doesn't implement some of the libc functions that the async
-            // stuff depends on, and we don't bind to any of that in any case.
-            .arg("no-async");
+            .arg("no-zlib-dynamic");
 
         if target.contains("musl") || target.contains("windows") {
             // This actually fails to compile on musl (it needs linux/version.h
             // right now) but we don't actually need this most of the time.
+            // API of engine.c ld fail in Windows.
             configure.arg("no-engine");
+        }
+
+        if target.contains("musl") {
+            // MUSL doesn't implement some of the libc functions that the async
+            // stuff depends on, and we don't bind to any of that in any case.
+            configure.arg("no-async");
         }
 
         // On Android it looks like not passing no-stdio may cause a build
