@@ -240,13 +240,18 @@ impl Build {
                     continue;
                 }
 
-                // cargo-lipo specifies this but OpenSSL complains
-                if target.contains("apple-ios") {
+                // cc includes an `-arch` flag for Apple platforms, but we've
+                // already selected an arch implicitly via the target above, and
+                // OpenSSL contains about the conflict if both are specified.
+                if target.contains("apple") {
                     if arg == "-arch" {
                         skip_next = true;
                         continue;
                     }
+                }
 
+                // cargo-lipo specifies this but OpenSSL complains
+                if target.contains("apple-ios") {
                     if arg == "-isysroot" {
                         is_isysroot = true;
                         continue;
