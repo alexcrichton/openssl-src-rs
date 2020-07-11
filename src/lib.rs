@@ -104,6 +104,25 @@ impl Build {
             .arg("no-zlib")
             .arg("no-zlib-dynamic");
 
+        if cfg!(not(feature = "weak-crypto")) {
+            configure
+                .arg("no-md2")
+                .arg("no-rc5")
+                .arg("no-weak-ssl-ciphers");
+        }
+
+        if cfg!(not(feature = "camellia")) {
+            configure.arg("no-camellia");
+        }
+
+        if cfg!(not(feature = "idea")) {
+            configure.arg("no-idea");
+        }
+
+        if cfg!(not(feature = "seed")) {
+            configure.arg("no-seed");
+        }
+
         if target.contains("musl") || target.contains("windows") {
             // This actually fails to compile on musl (it needs linux/version.h
             // right now) but we don't actually need this most of the time.
