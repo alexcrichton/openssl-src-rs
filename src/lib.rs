@@ -1,8 +1,7 @@
 extern crate cc;
 
 use std::env;
-use std::fs::{self, File};
-use std::io::{Read, Write};
+use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -453,18 +452,14 @@ fn apply_patches(target: &str, inner: &Path) {
 
     // Undo part of https://github.com/openssl/openssl/commit/c352bd07ed2ff872876534c950a6968d75ef121e on MUSL
     // since it doesn't have asm/unistd.h
-    let mut buf = String::new();
     let path = inner.join("crypto/rand/rand_unix.c");
-    File::open(&path).unwrap().read_to_string(&mut buf).unwrap();
+    let buf = fs::read_to_string(&path).unwrap();
 
     let buf = buf
         .replace("asm/unistd.h", "sys/syscall.h")
         .replace("__NR_getrandom", "SYS_getrandom");
 
-    File::create(&path)
-        .unwrap()
-        .write_all(buf.as_bytes())
-        .unwrap();
+    fs::write(path, buf).unwrap();
 }
 
 fn sanitize_sh(path: &Path) -> String {
