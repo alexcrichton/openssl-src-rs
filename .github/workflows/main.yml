@@ -43,6 +43,10 @@ jobs:
           target: x86_64-apple-darwin
           rust: stable
           os: macos-latest
+        - thing: macos-aarch64
+          target: aarch64-apple-darwin
+          rust: nightly
+          os: macos-latest
         - thing: arm-android
           target: arm-linux-androideabi
           rust: stable
