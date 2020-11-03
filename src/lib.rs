@@ -53,6 +53,7 @@ impl Build {
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
         if host.contains("dragonfly")
             || host.contains("freebsd")
+            || host.contains("openbsd")
             || host.contains("solaris")
             || host.contains("illumos")
         {
@@ -210,6 +211,7 @@ impl Build {
             "x86_64-unknown-illumos" => "solaris64-x86_64-gcc",
             "x86_64-unknown-linux-gnu" => "linux-x86_64",
             "x86_64-unknown-linux-musl" => "linux-x86_64",
+            "x86_64-unknown-openbsd" => "BSD-x86_64",
             "x86_64-unknown-netbsd" => "BSD-x86_64",
             "x86_64-sun-solaris" => "solaris64-x86_64-gcc",
             "wasm32-unknown-emscripten" => "gcc",
