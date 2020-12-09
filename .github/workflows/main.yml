@@ -116,11 +116,11 @@ jobs:
     - run: rustup target add ${{ matrix.target }}
     - name: Set crt-static
       if: matrix.crt_static == 'yes'
-      run: echo ::set-env name=RUSTFLAGS::-Ctarget-feature=+crt-static
+      run: echo RUSTFLAGS=-Ctarget-feature=+crt-static >> $GITHUB_ENV
       shell: bash
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
-      run: echo ::set-env name=OPENSSL_SRC_PERL::C:/Strawberry/perl/bin/perl
+      run: echo OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl >> $GITHUB_ENV
       shell: bash
     - run: |
         set -e
