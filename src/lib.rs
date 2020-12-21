@@ -177,6 +177,8 @@ impl Build {
             "arm-unknown-linux-musleabihf" => "linux-armv4",
             "armv6-unknown-freebsd" => "BSD-generic32",
             "armv7-unknown-freebsd" => "BSD-generic32",
+            "armv7-unknown-linux-gnueabi" => "linux-armv4",
+            "armv7-unknown-linux-musleabi" => "linux-armv4",
             "armv7-unknown-linux-gnueabihf" => "linux-armv4",
             "armv7-unknown-linux-musleabihf" => "linux-armv4",
             "asmjs-unknown-emscripten" => "gcc",
