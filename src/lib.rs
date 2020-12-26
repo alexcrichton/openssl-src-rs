@@ -218,6 +218,7 @@ impl Build {
             "x86_64-sun-solaris" => "solaris64-x86_64-gcc",
             "wasm32-unknown-emscripten" => "gcc",
             "wasm32-unknown-unknown" => "gcc",
+            "wasm32-wasi" => "gcc",
             "aarch64-apple-ios" => "ios64-cross",
             "x86_64-apple-ios" => "iossimulator-xcrun",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
