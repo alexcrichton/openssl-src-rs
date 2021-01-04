@@ -131,9 +131,9 @@ jobs:
       if: "!startsWith(matrix.os, 'windows')"
       name: Run tests (not Windows)
     - run: |
-        cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }}
-        cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release
-        cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package
+        cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} -vv
+        cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release -vv
+        cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package -vv
       if: startsWith(matrix.os, 'windows')
       name: Run tests (Windows)
 
