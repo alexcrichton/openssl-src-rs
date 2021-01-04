@@ -95,6 +95,7 @@ impl Build {
         configure
             // No shared objects, we just want static libraries
             .arg("no-dso")
+            .arg("no-shared")
             // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
             .arg("no-ssl3")
             // No need to build tests, we won't run them anyway
@@ -147,14 +148,6 @@ impl Build {
             // On MSVC we need nasm.exe to compile the assembly files, but let's
             // just pessimistically assume for now that's not available.
             configure.arg("no-asm");
-
-            let features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or(String::new());
-            if features.contains("crt-static") {
-                configure.arg("no-shared");
-            }
-        } else {
-            // Never shared on non-MSVC
-            configure.arg("no-shared");
         }
 
         let os = match target {
