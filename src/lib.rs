@@ -23,6 +23,7 @@ pub struct Artifacts {
     include_dir: PathBuf,
     lib_dir: PathBuf,
     libs: Vec<String>,
+    target: String,
 }
 
 impl Build {
@@ -408,6 +409,7 @@ impl Build {
             lib_dir: install_dir.join("lib"),
             include_dir: install_dir.join("include"),
             libs: libs,
+            target: target.to_string(),
         }
     }
 
@@ -515,5 +517,8 @@ impl Artifacts {
         }
         println!("cargo:include={}", self.include_dir.display());
         println!("cargo:lib={}", self.lib_dir.display());
+        if self.target.contains("msvc") {
+            println!("cargo:rustc-link-lib=user32");
+        }
     }
 }
