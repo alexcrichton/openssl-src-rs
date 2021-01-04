@@ -1,6 +1,10 @@
 name: CI
 on: [push, pull_request]
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     name: Test
@@ -112,16 +116,13 @@ jobs:
         submodules: true
     - name: Install Rust (rustup)
       run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
-      shell: bash
     - run: rustup target add ${{ matrix.target }}
     - name: Set crt-static
       if: matrix.crt_static == 'yes'
       run: echo RUSTFLAGS=-Ctarget-feature=+crt-static >> $GITHUB_ENV
-      shell: bash
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
       run: echo OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl >> $GITHUB_ENV
-      shell: bash
     - run: |
         set -e
         cargo generate-lockfile
@@ -134,7 +135,6 @@ jobs:
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package
       if: startsWith(matrix.os, 'windows')
       name: Run tests (Windows)
-      shell: cmd
 
   rustfmt:
     name: Rustfmt
