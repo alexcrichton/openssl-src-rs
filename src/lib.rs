@@ -24,6 +24,7 @@ pub struct Artifacts {
     lib_dir: PathBuf,
     libs: Vec<String>,
     target: String,
+    shared: bool,
 }
 
 impl Build {
@@ -144,7 +145,7 @@ impl Build {
             configure.arg("no-stdio");
         }
 
-        if target.contains("msvc") {
+        let shared = if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files, but let's
             // just pessimistically assume for now that's not available.
             configure.arg("no-asm");
@@ -152,11 +153,15 @@ impl Build {
             let features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or(String::new());
             if features.contains("crt-static") {
                 configure.arg("no-shared");
+                false
+            } else {
+                true
             }
         } else {
             // Never shared on non-MSVC
             configure.arg("no-shared");
-        }
+            false
+        };
 
         let os = match target {
             "aarch64-apple-darwin" => "darwin64-arm64-cc",
@@ -410,6 +415,7 @@ impl Build {
             include_dir: install_dir.join("include"),
             libs: libs,
             target: target.to_string(),
+            shared,
         }
     }
 
@@ -513,11 +519,15 @@ impl Artifacts {
     pub fn print_cargo_metadata(&self) {
         println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
         for lib in self.libs.iter() {
-            println!("cargo:rustc-link-lib=static={}", lib);
+            if self.shared {
+                println!("cargo:rustc-link-lib={}", lib);
+            } else {
+                println!("cargo:rustc-link-lib=static={}", lib);
+            }
         }
         println!("cargo:include={}", self.include_dir.display());
         println!("cargo:lib={}", self.lib_dir.display());
-        if self.target.contains("msvc") {
+        if !self.shared && self.target.contains("msvc") {
             println!("cargo:rustc-link-lib=user32");
         }
     }
