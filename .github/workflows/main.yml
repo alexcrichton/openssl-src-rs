@@ -119,7 +119,7 @@ jobs:
       run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.target }}
     - name: Set crt-static
-      if: matrix.crt_static == 'yes'
+      if: matrix.crt_static == 'true'
       run: echo RUSTFLAGS=-Ctarget-feature=+crt-static >> $GITHUB_ENV
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
