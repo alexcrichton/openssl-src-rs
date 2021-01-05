@@ -1,5 +1,9 @@
 name: CI
-on: [push, pull_request]
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
 
 defaults:
   run:
@@ -12,104 +16,66 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        thing:
-        - stable
-        - beta
-        - nightly
-        - macos-x86_64
-        - arm-android
-        - arm64-android
-        - i686-android
-        - x86_64-android
-        - i686-linux
-        - arm-linux
-        - aarch64-linux
-        - x86_64-musl
-        - x86_64-mingw
-        # - asmjs
-        - i686-msvc
-        - i686-msvc-static
-        - x86_64-msvc
-        - x86_64-msvc-static
         include:
-        - thing: stable
-          target: x86_64-unknown-linux-gnu
+        - target: x86_64-unknown-linux-gnu
           rust: stable
           os: ubuntu-latest
-        - thing: beta
-          target: x86_64-unknown-linux-gnu
+        - target: x86_64-unknown-linux-gnu
           rust: beta
           os: ubuntu-latest
-        - thing: nightly
-          target: x86_64-unknown-linux-gnu
+        - target: x86_64-unknown-linux-gnu
           rust: nightly
           os: ubuntu-latest
-        - thing: macos-x86_64
-          target: x86_64-apple-darwin
+        - target: x86_64-apple-darwin
           rust: stable
           os: macos-latest
-        - thing: macos-aarch64
-          target: aarch64-apple-darwin
+        - target: aarch64-apple-darwin
           rust: nightly
           os: macos-latest
-        - thing: arm-android
-          target: arm-linux-androideabi
+        - target: arm-linux-androideabi
           rust: stable
           os: ubuntu-latest
-        - thing: arm64-android
-          target: aarch64-linux-android
+        - target: aarch64-linux-android
           rust: stable
           os: ubuntu-latest
-        - thing: i686-android
-          target: i686-linux-android
+        - target: i686-linux-android
           rust: stable
           os: ubuntu-latest
-        - thing: x86_64-android
-          target: x86_64-linux-android
+        - target: x86_64-linux-android
           rust: stable
           os: ubuntu-latest
-        - thing: i686-linux
-          target: i686-unknown-linux-gnu
+        - target: i686-unknown-linux-gnu
           rust: stable
           os: ubuntu-latest
-        - thing: arm-linux
-          target: arm-unknown-linux-gnueabi
+        - target: arm-unknown-linux-gnueabi
           rust: stable
           os: ubuntu-latest
-        - thing: aarch64-linux
-          target: aarch64-unknown-linux-gnu
+        - target: aarch64-unknown-linux-gnu
           rust: stable
           os: ubuntu-latest
-        - thing: x86_64-musl
-          target: x86_64-unknown-linux-musl
+        - target: x86_64-unknown-linux-musl
           rust: stable
           os: ubuntu-latest
-        - thing: x86_64-mingw
-          target: x86_64-pc-windows-gnu
+        - target: x86_64-pc-windows-gnu
           rust: stable
           os: ubuntu-latest
-        # - thing: asmjs
-        #   target: asmjs-unknown-emscripten
+        # - target: asmjs-unknown-emscripten
         #   rust: stable
         #   os: ubuntu-latest
-        - thing: i686-msvc
-          target: i686-pc-windows-msvc
+        - target: i686-pc-windows-msvc
           rust: stable-i686-msvc
           os: windows-2016
-        - thing: i686-msvc-static
-          target: i686-pc-windows-msvc
+        - target: i686-pc-windows-msvc
           rust: stable-i686-msvc
           os: windows-2016
-          crt_static: true
-        - thing: x86_64-msvc
-          target: x86_64-pc-windows-msvc
+          crt_static: yes
+        - target: x86_64-pc-windows-msvc
           rust: stable-x86_64-msvc
           os: windows-latest
-        - thing: x86_64-msvc-static
-          target: x86_64-pc-windows-msvc
+        - target: x86_64-pc-windows-msvc
           rust: stable-x86_64-msvc
           os: windows-latest
-          crt_static: true
+          crt_static: yes
 
     steps:
     - uses: actions/checkout@v1
@@ -119,7 +85,7 @@ jobs:
       run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
     - run: rustup target add ${{ matrix.target }}
     - name: Set crt-static
-      if: matrix.crt_static == 'true'
+      if: matrix.crt_static == 'yes'
       run: echo RUSTFLAGS=-Ctarget-feature=+crt-static >> $GITHUB_ENV
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
