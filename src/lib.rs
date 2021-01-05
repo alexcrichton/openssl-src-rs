@@ -147,23 +147,11 @@ impl Build {
             configure.arg("no-stdio");
         }
 
-        let shared = if target.contains("msvc") {
+        if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files, but let's
             // just pessimistically assume for now that's not available.
             configure.arg("no-asm");
-
-            let features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or(String::new());
-            if features.contains("crt-static") {
-                configure.arg("no-shared");
-                false
-            } else {
-                true
-            }
-        } else {
-            // Never shared on non-MSVC
-            configure.arg("no-shared");
-            false
-        };
+        }
 
         let os = match target {
             "aarch64-apple-darwin" => "darwin64-arm64-cc",
@@ -418,7 +406,7 @@ impl Build {
             include_dir: install_dir.join("include"),
             libs: libs,
             target: target.to_string(),
-            shared,
+            shared: false,
         }
     }
 
