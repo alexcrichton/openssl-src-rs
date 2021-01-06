@@ -25,7 +25,6 @@ pub struct Artifacts {
     bin_dir: PathBuf,
     libs: Vec<String>,
     target: String,
-    shared: bool,
 }
 
 impl Build {
@@ -406,7 +405,6 @@ impl Build {
             include_dir: install_dir.join("include"),
             libs: libs,
             target: target.to_string(),
-            shared: false,
         }
     }
 
@@ -510,20 +508,12 @@ impl Artifacts {
     pub fn print_cargo_metadata(&self) {
         println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
         for lib in self.libs.iter() {
-            if self.shared {
-                println!("cargo:rustc-link-lib={}", lib);
-            } else {
-                println!("cargo:rustc-link-lib=static={}", lib);
-            }
+            println!("cargo:rustc-link-lib=static={}", lib);
         }
         println!("cargo:include={}", self.include_dir.display());
         println!("cargo:lib={}", self.lib_dir.display());
         if self.target.contains("msvc") {
-            if self.shared {
-                println!("cargo:rustc-link-search=native={}", self.bin_dir.display());
-            } else {
-                println!("cargo:rustc-link-lib=user32");
-            }
+            println!("cargo:rustc-link-lib=user32");
         }
     }
 }
