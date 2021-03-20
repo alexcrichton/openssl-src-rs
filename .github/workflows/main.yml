@@ -114,13 +114,16 @@ jobs:
         WINNASMVERSION='2.15.05'
         curl -O https://www.nasm.us/pub/nasm/releasebuilds/${WINNASMVERSION}/win64/nasm-${WINNASMVERSION}-win64.zip
         unzip nasm-${WINNASMVERSION}-win64.zip
-        echo PATH=$PWD/nasm-${WINNASMVERSION}:$PATH >> $GITHUB_ENV
+        mv nasm-${WINNASMVERSION} nasm_win64
     - name: Set NO_NASM env var (Windows)
       if: startsWith(matrix.os, 'windows') && matrix.env_no_nasm == 'set'
       run: echo OPENSSL_RUST_NO_NASM=1 >> $GITHUB_ENV
     - name: Run tests (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
+        if [ '${{ matrix.nasm_exe }}' = 'installed' ] ; then
+        export PATH=$PWD/nasm_win64:$PATH
+        fi
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} -vv
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release -vv
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package -vv
