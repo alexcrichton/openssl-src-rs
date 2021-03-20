@@ -9,6 +9,9 @@ defaults:
   run:
     shell: bash
 
+env:
+  WINNASMVERSION: 2.15.05
+
 jobs:
   test:
     name: Test
@@ -76,6 +79,15 @@ jobs:
           rust: stable-x86_64-msvc
           os: windows-latest
           crt_static: yes
+        - target: x86_64-pc-windows-msvc
+          rust: stable-x86_64-msvc
+          os: windows-latest
+          nasm_exe: installed
+        - target: x86_64-pc-windows-msvc
+          rust: stable-x86_64-msvc
+          os: windows-latest
+          nasm_exe: installed
+          env_no_nasm: set
 
     steps:
     - uses: actions/checkout@v1
@@ -90,18 +102,34 @@ jobs:
     - name: Use strawberry perl
       if: startsWith(matrix.os, 'windows')
       run: echo OPENSSL_SRC_PERL=C:/Strawberry/perl/bin/perl >> $GITHUB_ENV
-    - run: |
+    - name: Run tests (not Windows)
+      if: "!startsWith(matrix.os, 'windows')"
+      run: |
         set -e
         cargo generate-lockfile
         ./ci/run-docker.sh ${{ matrix.target }}
-      if: "!startsWith(matrix.os, 'windows')"
-      name: Run tests (not Windows)
-    - run: |
+    - name: Download nasm.exe (Windows)
+      if: startsWith(matrix.os, 'windows') && matrix.nasm_exe == 'installed'
+      run: |
+        WINNASMVERSION='2.15.05'
+        curl -O https://www.nasm.us/pub/nasm/releasebuilds/${WINNASMVERSION}/win64/nasm-${WINNASMVERSION}-win64.zip
+        unzip nasm-${WINNASMVERSION}-win64.zip
+        echo PATH=$PWD/nasm-${WINNASMVERSION}:$PATH >> $GITHUB_ENV
+    - name: Set NO_NASM env var (Windows)
+      if: startsWith(matrix.os, 'windows') && matrix.env_no_nasm == 'set'
+      run: echo OPENSSL_RUST_NO_NASM=1 >> $GITHUB_ENV
+    - name: Run tests (Windows)
+      if: startsWith(matrix.os, 'windows')
+      run: |
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} -vv
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release -vv
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package -vv
-      if: startsWith(matrix.os, 'windows')
-      name: Run tests (Windows)
+    - name: Verify no-nasm option (Windows)
+      if: startsWith(matrix.os, 'windows') && matrix.env_no_nasm == 'set'
+      run: |
+        # if the nasm.exe is disabled, there should be 'no-asm' in the configure command
+        echo 'CI: In output files, there should be no-asm configured:'
+        grep 'no-asm' target/${{ matrix.target }}/*/build/*/output
 
   rustfmt:
     name: Rustfmt

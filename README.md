@@ -15,6 +15,15 @@ This project is licensed under either of
 
 at your option.
 
+### Windows MSVC Assembly
+Building the `windows-msvc` targets on Windows, the build process will
+automatically detect whether [nasm](https://www.nasm.us/) is installed in PATH.
+The assembly language routines will be enabled if `nasm.exe` is found in PATH (in
+other words, the `no-asm` option will NOT be configured).  
+You can disable the this by set the `OPENSSL_RUST_NO_NASM` environment variable to
+a non-zero value. This environment variable does not take effects on non-windows
+platforms.
+
 ### Contribution
 
 Unless you explicitly state otherwise, any contribution intentionally submitted

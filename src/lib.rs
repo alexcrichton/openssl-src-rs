@@ -65,6 +65,24 @@ impl Build {
         }
     }
 
+    fn is_nasm_ready(&self) -> bool {
+        if cfg!(windows) {
+            // OPENSSL_RUST_NO_NASM=0 or not set: auto-detect
+            // OPENSSL_RUST_NO_NASM is a non-zero value: disable nasm.exe
+            env::var_os("OPENSSL_RUST_NO_NASM").map_or(true, |s| s == "0") && {
+                // On Windows, use cmd `where` command to check if nasm is installed
+                let wherenasm = Command::new("cmd")
+                    .args(&["/C", "where nasm"])
+                    .output()
+                    .expect("Failed to execute `cmd`.");
+                wherenasm.status.success()
+            }
+        } else {
+            // We assume that nobody would run nasm.exe on a non-windows system.
+            false
+        }
+    }
+
     pub fn build(&mut self) -> Artifacts {
         let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
@@ -147,9 +165,19 @@ impl Build {
         }
 
         if target.contains("msvc") {
-            // On MSVC we need nasm.exe to compile the assembly files, but let's
-            // just pessimistically assume for now that's not available.
-            configure.arg("no-asm");
+            // On MSVC we need nasm.exe to compile the assembly files.
+            // ASM compiling will be enabled if nasm.exe is installed,
+            // unless the environment variable `OPENSSL_RUST_NO_NASM`
+            // is set to a non-zero value.
+            if self.is_nasm_ready() {
+                // a message to stdout, let user know asm is enabled
+                println!(
+                    "{}: nasm.exe is found in PATH, enable the assembly language routines.",
+                    env!("CARGO_PKG_NAME")
+                );
+            } else {
+                configure.arg("no-asm");
+            }
         }
 
         let os = match target {
