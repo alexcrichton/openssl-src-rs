@@ -109,30 +109,21 @@ jobs:
         cargo generate-lockfile
         ./ci/run-docker.sh ${{ matrix.target }}
     - name: Download nasm.exe (Windows)
-      if: startsWith(matrix.os, 'windows') && matrix.nasm_exe == 'installed'
+      if: matrix.nasm_exe == 'installed'
       run: |
         WINNASMVERSION='2.15.05'
         curl -O https://www.nasm.us/pub/nasm/releasebuilds/${WINNASMVERSION}/win64/nasm-${WINNASMVERSION}-win64.zip
         unzip nasm-${WINNASMVERSION}-win64.zip
-        mv nasm-${WINNASMVERSION} nasm_win64
+        echo "$PWD/nasm-${WINNASMVERSION}" >> $GITHUB_PATH
     - name: Set NO_NASM env var (Windows)
-      if: startsWith(matrix.os, 'windows') && matrix.env_no_nasm == 'set'
+      if: matrix.env_no_nasm == 'set'
       run: echo OPENSSL_RUST_NO_NASM=1 >> $GITHUB_ENV
     - name: Run tests (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |
-        if [ '${{ matrix.nasm_exe }}' = 'installed' ] ; then
-        export PATH=$PWD/nasm_win64:$PATH
-        fi
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} -vv
         cargo test --manifest-path testcrate/Cargo.toml --target ${{ matrix.target }} --release -vv
         cargo run --release --target ${{ matrix.target }} --manifest-path testcrate/Cargo.toml --features package -vv
-    - name: Verify no-nasm option (Windows)
-      if: startsWith(matrix.os, 'windows') && matrix.env_no_nasm == 'set'
-      run: |
-        # if the nasm.exe is disabled, there should be 'no-asm' in the configure command
-        echo 'CI: In output files, there should be no-asm configured:'
-        grep 'no-asm' target/${{ matrix.target }}/*/build/*/output
 
   rustfmt:
     name: Rustfmt
