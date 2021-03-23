@@ -9,9 +9,6 @@ defaults:
   run:
     shell: bash
 
-env:
-  WINNASMVERSION: 2.15.05
-
 jobs:
   test:
     name: Test
@@ -83,11 +80,6 @@ jobs:
           rust: stable-x86_64-msvc
           os: windows-latest
           nasm_exe: installed
-        - target: x86_64-pc-windows-msvc
-          rust: stable-x86_64-msvc
-          os: windows-latest
-          nasm_exe: installed
-          env_no_nasm: set
 
     steps:
     - uses: actions/checkout@v1
@@ -115,9 +107,6 @@ jobs:
         curl -O https://www.nasm.us/pub/nasm/releasebuilds/${WINNASMVERSION}/win64/nasm-${WINNASMVERSION}-win64.zip
         unzip nasm-${WINNASMVERSION}-win64.zip
         echo "$PWD/nasm-${WINNASMVERSION}" >> $GITHUB_PATH
-    - name: Set NO_NASM env var (Windows)
-      if: matrix.env_no_nasm == 'set'
-      run: echo OPENSSL_RUST_NO_NASM=1 >> $GITHUB_ENV
     - name: Run tests (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |

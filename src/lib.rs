@@ -65,22 +65,42 @@ impl Build {
         }
     }
 
+    #[cfg(windows)]
+    fn check_env_var(&self, var_name: &str) -> Option<bool> {
+        env::var_os(var_name).and_then(|s| {
+            let tmp = s
+                .to_str()
+                .expect("The environment variable has invalid Unicode")
+                .to_lowercase();
+            match &tmp[..] {
+                "y" | "yes" | "on" | "true" | "t" | "1" => Some(true),
+                "n" | "no" | "off" | "false" | "f" | "-1" => Some(false),
+                "a" | "auto" | "0" => None,
+                _ => panic!(
+                    "The environment variable {} is set to an unrecognizable value: {}",
+                    var_name, tmp
+                ),
+            }
+        })
+    }
+
+    #[cfg(windows)]
     fn is_nasm_ready(&self) -> bool {
-        if cfg!(windows) {
-            // OPENSSL_RUST_NO_NASM=0 or not set: auto-detect
-            // OPENSSL_RUST_NO_NASM is a non-zero value: disable nasm.exe
-            env::var_os("OPENSSL_RUST_NO_NASM").map_or(true, |s| s == "0") && {
+        self.check_env_var("OPENSSL_RUST_USE_NASM")
+            .unwrap_or_else(|| {
                 // On Windows, use cmd `where` command to check if nasm is installed
                 let wherenasm = Command::new("cmd")
                     .args(&["/C", "where nasm"])
                     .output()
                     .expect("Failed to execute `cmd`.");
                 wherenasm.status.success()
-            }
-        } else {
-            // We assume that nobody would run nasm.exe on a non-windows system.
-            false
-        }
+            })
+    }
+
+    #[cfg(not(windows))]
+    fn is_nasm_ready(&self) -> bool {
+        // We assume that nobody would run nasm.exe on a non-windows system.
+        false
     }
 
     pub fn build(&mut self) -> Artifacts {
@@ -166,13 +186,14 @@ impl Build {
 
         if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files.
-            // ASM compiling will be enabled if nasm.exe is installed,
-            // unless the environment variable `OPENSSL_RUST_NO_NASM`
-            // is set to a non-zero value.
+            // ASM compiling will be enabled if nasm.exe is installed, unless
+            // the environment variable `OPENSSL_RUST_USE_NASM` is set.
             if self.is_nasm_ready() {
                 // a message to stdout, let user know asm is enabled
                 println!(
-                    "{}: nasm.exe is found in PATH, enable the assembly language routines.",
+                    "{}: Enable the assembly language routines in building \
+                    OpenSSL. Because nasm.exe is found in PATH or this is force \
+                    enabled by the 'OPENSSL_RUST_USE_NASM' env var.",
                     env!("CARGO_PKG_NAME")
                 );
             } else {

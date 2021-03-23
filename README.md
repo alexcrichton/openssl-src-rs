@@ -16,13 +16,20 @@ This project is licensed under either of
 at your option.
 
 ### Windows MSVC Assembly
-Building the `windows-msvc` targets on Windows, the build process will
-automatically detect whether [nasm](https://www.nasm.us/) is installed in PATH.
-The assembly language routines will be enabled if `nasm.exe` is found in PATH (in
-other words, the `no-asm` option will NOT be configured).  
-You can disable the this by set the `OPENSSL_RUST_NO_NASM` environment variable to
-a non-zero value. This environment variable does not take effects on non-windows
-platforms.
+Building OpenSSL for `windows-msvc` targets, users can choose whether to enable
+assembly language routines, which requires [nasm](https://www.nasm.us/).  
+The build process will automatically detect whether `nasm.exe` is installed in
+PATH. If found, the assembly language routines will be enabled (in other words,
+the `no-asm` option will NOT be configured).  
+You can manipulate this behavior by setting the `OPENSSL_RUST_USE_NASM` environment
+variable:
+* `yes`, `y`, `on`, `true`, `t` or `1`: Force enable the assembly language routines.
+(panic if `nasm.exe` is not availible.)
+* `no`, `n`, `off`, `false`, `f` or `-1`: Force disable the assembly language
+routines even if the `nasm.exe` can be found in PATH.
+* `auto`, `a`, `0` or not set: Let the build process automatically detect whether
+`nasm.exe` is installed. If found, enable. If not, disable.
+However, this environment variable does not take effects on non-windows platforms.
 
 ### Contribution
 
