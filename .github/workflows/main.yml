@@ -107,6 +107,7 @@ jobs:
         curl -O https://www.nasm.us/pub/nasm/releasebuilds/${WINNASMVERSION}/win64/nasm-${WINNASMVERSION}-win64.zip
         unzip nasm-${WINNASMVERSION}-win64.zip
         echo "$PWD/nasm-${WINNASMVERSION}" >> $GITHUB_PATH
+        echo "OPENSSL_RUST_USE_NASM=yes" >> $GITHUB_ENV
     - name: Run tests (Windows)
       if: startsWith(matrix.os, 'windows')
       run: |

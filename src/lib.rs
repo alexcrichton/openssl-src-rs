@@ -73,9 +73,9 @@ impl Build {
                 .expect("The environment variable has invalid Unicode")
                 .to_lowercase();
             match &tmp[..] {
-                "y" | "yes" | "on" | "true" | "t" | "1" => Some(true),
-                "n" | "no" | "off" | "false" | "f" | "-1" => Some(false),
-                "a" | "auto" | "0" => None,
+                "y" | "yes" => Some(true),
+                "n" | "no" => Some(false),
+                "a" | "auto" => None,
                 _ => panic!(
                     "The environment variable {} is set to an unrecognizable value: {}",
                     var_name, tmp
