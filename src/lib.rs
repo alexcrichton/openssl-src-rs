@@ -67,19 +67,28 @@ impl Build {
 
     #[cfg(windows)]
     fn check_env_var(&self, var_name: &str) -> Option<bool> {
-        env::var_os(var_name).and_then(|s| {
-            let tmp = s
-                .to_str()
-                .expect("The environment variable has invalid Unicode")
-                .to_lowercase();
-            match &tmp[..] {
-                "y" | "yes" => Some(true),
-                "n" | "no" => Some(false),
-                "a" | "auto" => None,
-                _ => panic!(
-                    "The environment variable {} is set to an unrecognizable value: {}",
-                    var_name, tmp
-                ),
+        env::var_os(var_name).map(|s| {
+            if s == "1" {
+                // a message to stdout, let user know asm is force enabled
+                println!(
+                    "{}: nasm.exe is force enabled by the \
+                    'OPENSSL_RUST_USE_NASM' env var.",
+                    env!("CARGO_PKG_NAME")
+                );
+                true
+            } else if s == "0" {
+                // a message to stdout, let user know asm is force disabled
+                println!(
+                    "{}: nasm.exe is force disabled by the \
+                    'OPENSSL_RUST_USE_NASM' env var.",
+                    env!("CARGO_PKG_NAME")
+                );
+                false
+            } else {
+                panic!(
+                    "The environment variable {} is set to an unacceptable value: {:?}",
+                    var_name, s
+                );
             }
         })
     }
@@ -191,9 +200,7 @@ impl Build {
             if self.is_nasm_ready() {
                 // a message to stdout, let user know asm is enabled
                 println!(
-                    "{}: Enable the assembly language routines in building \
-                    OpenSSL. Because nasm.exe is found in PATH or this is force \
-                    enabled by the 'OPENSSL_RUST_USE_NASM' env var.",
+                    "{}: Enable the assembly language routines in building OpenSSL.",
                     env!("CARGO_PKG_NAME")
                 );
             } else {
