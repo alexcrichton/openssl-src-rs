@@ -65,6 +65,53 @@ impl Build {
         }
     }
 
+    #[cfg(windows)]
+    fn check_env_var(&self, var_name: &str) -> Option<bool> {
+        env::var_os(var_name).map(|s| {
+            if s == "1" {
+                // a message to stdout, let user know asm is force enabled
+                println!(
+                    "{}: nasm.exe is force enabled by the \
+                    'OPENSSL_RUST_USE_NASM' env var.",
+                    env!("CARGO_PKG_NAME")
+                );
+                true
+            } else if s == "0" {
+                // a message to stdout, let user know asm is force disabled
+                println!(
+                    "{}: nasm.exe is force disabled by the \
+                    'OPENSSL_RUST_USE_NASM' env var.",
+                    env!("CARGO_PKG_NAME")
+                );
+                false
+            } else {
+                panic!(
+                    "The environment variable {} is set to an unacceptable value: {:?}",
+                    var_name, s
+                );
+            }
+        })
+    }
+
+    #[cfg(windows)]
+    fn is_nasm_ready(&self) -> bool {
+        self.check_env_var("OPENSSL_RUST_USE_NASM")
+            .unwrap_or_else(|| {
+                // On Windows, use cmd `where` command to check if nasm is installed
+                let wherenasm = Command::new("cmd")
+                    .args(&["/C", "where nasm"])
+                    .output()
+                    .expect("Failed to execute `cmd`.");
+                wherenasm.status.success()
+            })
+    }
+
+    #[cfg(not(windows))]
+    fn is_nasm_ready(&self) -> bool {
+        // We assume that nobody would run nasm.exe on a non-windows system.
+        false
+    }
+
     pub fn build(&mut self) -> Artifacts {
         let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
@@ -147,9 +194,18 @@ impl Build {
         }
 
         if target.contains("msvc") {
-            // On MSVC we need nasm.exe to compile the assembly files, but let's
-            // just pessimistically assume for now that's not available.
-            configure.arg("no-asm");
+            // On MSVC we need nasm.exe to compile the assembly files.
+            // ASM compiling will be enabled if nasm.exe is installed, unless
+            // the environment variable `OPENSSL_RUST_USE_NASM` is set.
+            if self.is_nasm_ready() {
+                // a message to stdout, let user know asm is enabled
+                println!(
+                    "{}: Enable the assembly language routines in building OpenSSL.",
+                    env!("CARGO_PKG_NAME")
+                );
+            } else {
+                configure.arg("no-asm");
+            }
         }
 
         let os = match target {
