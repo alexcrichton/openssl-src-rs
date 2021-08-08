@@ -540,7 +540,14 @@ fn sanitize_sh(path: &Path) -> String {
     if !cfg!(windows) {
         return path.to_str().unwrap().to_string();
     }
-    let path = path.to_str().unwrap().replace("\\", "/");
+
+    let path = match path.to_str() {
+        Some(value) => value.replace("\\", "/"),
+        None => {
+            eprintln!("Failed to find path {:?}", &path);
+            panic!();
+        }
+    };
     return change_drive(&path).unwrap_or(path);
 
     fn change_drive(s: &str) -> Option<String> {
