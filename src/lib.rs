@@ -543,7 +543,7 @@ fn sanitize_sh(path: &Path) -> String {
             None => {
                 panic!("Failed to find path {:?}", &path);
             }
-        }
+        };
     }
 
     let path = match path.to_str() {
