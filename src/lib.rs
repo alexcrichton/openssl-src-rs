@@ -544,8 +544,7 @@ fn sanitize_sh(path: &Path) -> String {
     let path = match path.to_str() {
         Some(value) => value.replace("\\", "/"),
         None => {
-            eprintln!("Failed to find path {:?}", &path);
-            panic!();
+            panic!("Failed to find path {:?}", &path);
         }
     };
     return change_drive(&path).unwrap_or(path);
