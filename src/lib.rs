@@ -538,7 +538,12 @@ fn apply_patches_musl(target: &str, inner: &Path) {
 
 fn sanitize_sh(path: &Path) -> String {
     if !cfg!(windows) {
-        return path.to_str().unwrap().to_string();
+        return match path.to_str() {
+            Some(value) => value.to_string(),
+            None => {
+                panic!("Failed to find path {:?}", &path);
+            }
+        }
     }
 
     let path = match path.to_str() {
