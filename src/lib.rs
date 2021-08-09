@@ -541,7 +541,7 @@ fn sanitize_sh(path: &Path) -> String {
         return match path.to_str() {
             Some(value) => value.to_string(),
             None => {
-                panic!("Failed to find path {:?}", &path);
+                panic!("Failed to convert path to string: {:?}", &path);
             }
         };
     }
@@ -549,7 +549,7 @@ fn sanitize_sh(path: &Path) -> String {
     let path = match path.to_str() {
         Some(value) => value.replace("\\", "/"),
         None => {
-            panic!("Failed to find path {:?}", &path);
+            panic!("Failed to convert path to string: {:?}", &path);
         }
     };
     return change_drive(&path).unwrap_or(path);
