@@ -477,7 +477,7 @@ impl Build {
         let status = match command.status() {
             Ok(value) => value,
             Err(error) => {
-                panic!("Error running command {:?} => {:?}", command, error);
+                panic!("Error running command => {:?}", error);
             }
         };
         if !status.success() {
