@@ -152,7 +152,11 @@ impl Build {
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
-            .arg("no-zlib-dynamic");
+            .arg("no-zlib-dynamic")
+            // Avoid multilib-postfix for build targets that specify it
+            .arg("--libdir=lib")
+            // No support for multiple providers yet
+            .arg("no-legacy");
 
         if cfg!(not(feature = "weak-crypto")) {
             configure
