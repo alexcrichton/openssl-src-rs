@@ -8,6 +8,8 @@ repository = "https://github.com/alexcrichton/openssl-src-rs"
 description = """
 Source of OpenSSL and logic to build it.
 """
+
+# Keep this list in sync with ci/run.sh
 exclude = [
   'openssl/boringssl/*',
   'openssl/fuzz/*',
