@@ -129,7 +129,6 @@ impl Build {
         let inner_dir = build_dir.join("src");
         fs::create_dir_all(&inner_dir).unwrap();
         cp_r(&source_dir(), &inner_dir);
-        apply_patches(target, &inner_dir);
 
         let perl_program =
             env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
@@ -517,27 +516,6 @@ fn cp_r(src: &Path, dst: &Path) {
             fs::copy(&path, &dst).unwrap();
         }
     }
-}
-
-fn apply_patches(target: &str, inner: &Path) {
-    apply_patches_musl(target, inner);
-}
-
-fn apply_patches_musl(target: &str, inner: &Path) {
-    if !target.contains("musl") {
-        return;
-    }
-
-    // Undo part of https://github.com/openssl/openssl/commit/c352bd07ed2ff872876534c950a6968d75ef121e on MUSL
-    // since it doesn't have asm/unistd.h
-    let path = inner.join("crypto/rand/rand_unix.c");
-    let buf = fs::read_to_string(&path).unwrap();
-
-    let buf = buf
-        .replace("asm/unistd.h", "sys/syscall.h")
-        .replace("__NR_getrandom", "SYS_getrandom");
-
-    fs::write(path, buf).unwrap();
 }
 
 fn sanitize_sh(path: &Path) -> String {
