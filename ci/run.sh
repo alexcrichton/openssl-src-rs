@@ -8,16 +8,17 @@ if [ "$1" = "aarch64-apple-darwin" ] ; then
 	export CARGO_TARGET_AARCH64_APPLE_DARWIN_RUNNER=echo
 fi
 
-# Remove directories that are excluded by Cargo.toml
-rm -rf openssl/boringssl
-rm -rf openssl/fuzz
-rm -rf openssl/krb5
-rm -rf openssl/pyca-cryptography
-rm -rf openssl/test
-rm -rf openssl/wycheproof
+# Use cargo package to ensure we don't rely on any files excluded by Cargo.toml
+cargo package --allow-dirty
 
-cargo test --manifest-path testcrate/Cargo.toml --target $1 -vv
-cargo test --manifest-path testcrate/Cargo.toml --target $1 -vv --release
+version=$(cargo run output-version)
+
+testcrate_dir="$(pwd)/testcrate"
+
+cd "target/package/openssl-src-$version"
+
+cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv
+cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --release
 if [ "$1" = "x86_64-unknown-linux-gnu" ] ; then
-	cargo test --manifest-path testcrate/Cargo.toml --target $1 -vv --all-features
+	cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --all-features
 fi

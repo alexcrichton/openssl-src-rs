@@ -16,7 +16,7 @@ docker build \
 docker run \
   --rm \
   --volume `rustc --print sysroot`:/rust:ro \
-  --volume `pwd`:/usr/code \
+  --volume `pwd`:/usr/code:ro \
   --volume `pwd`/target:/usr/code/target \
   --volume $HOME/.cargo:/cargo \
   --env CARGO_HOME=/cargo \
