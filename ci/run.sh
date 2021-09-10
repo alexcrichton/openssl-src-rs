@@ -1,4 +1,5 @@
 target=$1
+testcrate_dir="$(pwd)/testcrate"
 set -ex
 
 if [ "$1" = "aarch64-apple-darwin" ] ; then
@@ -8,17 +9,16 @@ if [ "$1" = "aarch64-apple-darwin" ] ; then
 	export CARGO_TARGET_AARCH64_APPLE_DARWIN_RUNNER=echo
 fi
 
-# Use cargo package to ensure we don't rely on any files excluded by Cargo.toml
-cargo package --allow-dirty
-
-version=$(cargo run output-version)
-
-testcrate_dir="$(pwd)/testcrate"
-
-cd "target/package/openssl-src-$version"
-
 cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv
 cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --release
+
 if [ "$1" = "x86_64-unknown-linux-gnu" ] ; then
 	cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --all-features
+
+	# Ensure we don't rely on any files excluded by Cargo.toml
+	rm -rf target/ci
+	cargo package --allow-dirty --target-dir target/ci
+	rm -f target/ci/package/*.crate
+	cd target/ci/package/openssl-src-*
+	cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv
 fi
