@@ -10,7 +10,8 @@ Source of OpenSSL and logic to build it.
 """
 exclude = [
   'openssl/boringssl/*',
-  'openssl/fuzz/*',
+  'openssl/demos/*',
+  'openssl/doc/*',
   'openssl/krb5/*',
   'openssl/pyca-cryptography/*',
   'openssl/test/*',

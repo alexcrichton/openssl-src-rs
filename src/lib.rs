@@ -130,13 +130,6 @@ impl Build {
         fs::create_dir_all(&inner_dir).unwrap();
         cp_r(&source_dir(), &inner_dir);
 
-        // OpenSSL 3.0.0 requires an empty build.info file in these directories
-        // to configure itself
-        fs::create_dir_all(inner_dir.join("fuzz")).unwrap();
-        fs::create_dir_all(inner_dir.join("test")).unwrap();
-        fs::File::create(inner_dir.join("fuzz/build.info")).unwrap();
-        fs::File::create(inner_dir.join("test/build.info")).unwrap();
-
         let perl_program =
             env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
         let mut configure = Command::new(perl_program);
@@ -154,7 +147,7 @@ impl Build {
             // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
             .arg("no-ssl3")
             // No need to build tests, we won't run them anyway
-            .arg("no-unit-test")
+            .arg("no-tests")
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
