@@ -147,7 +147,7 @@ impl Build {
             // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
             .arg("no-ssl3")
             // No need to build tests, we won't run them anyway
-            .arg("no-unit-test")
+            .arg("no-tests")
             // Nothing related to zlib please
             .arg("no-comp")
             .arg("no-zlib")
