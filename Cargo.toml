@@ -16,6 +16,7 @@ exclude = [
   'openssl/pyca-cryptography/*',
   'openssl/test/*',
   'openssl/wycheproof/*',
+  'openssl/fuzz/corpora/*',
 ]
 
 [features]
