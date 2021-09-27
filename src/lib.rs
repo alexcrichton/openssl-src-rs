@@ -268,6 +268,7 @@ impl Build {
             "riscv64gc-unknown-linux-gnu" => "linux-generic64",
             "s390x-unknown-linux-gnu" => "linux64-s390x",
             "s390x-unknown-linux-musl" => "linux64-s390x",
+            "sparcv9-sun-solaris" => "solaris64-sparcv9-gcc",
             "thumbv7a-uwp-windows-msvc" => "VC-WIN32-ARM-UWP",
             "x86_64-apple-darwin" => "darwin64-x86_64-cc",
             "x86_64-linux-android" => "linux-x86_64",
