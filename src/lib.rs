@@ -185,7 +185,7 @@ impl Build {
             // to correctly pick up crypt32.lib functions such as
             // `__imp_CertOpenStore` when building the capieng engine.
             // Let's disable just capieng.
-            config.arg("no-capieng");
+            configure.arg("no-capieng");
         }
 
         if target.contains("musl") {
