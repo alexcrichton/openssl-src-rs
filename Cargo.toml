@@ -9,14 +9,14 @@ description = """
 Source of OpenSSL and logic to build it.
 """
 exclude = [
-  'openssl/boringssl/*',
-  'openssl/demos/*',
-  'openssl/doc/*',
-  'openssl/krb5/*',
-  'openssl/pyca-cryptography/*',
-  'openssl/test/*',
-  'openssl/wycheproof/*',
   'openssl/fuzz/corpora/*',
+  'openssl/pyca-cryptography/*',
+  'openssl/wycheproof/*',
+  'openssl/boringssl/*',
+  'openssl/krb5/*',
+  'openssl/test/recipes/*',
+  'openssl/gost-engine/*',
+  'openssl/demos/*',
 ]
 
 [features]
@@ -36,6 +36,7 @@ seed = []
 
 [workspace]
 members = ['testcrate']
+exclude = ['target']
 
 [dependencies]
 cc = "1.0"
