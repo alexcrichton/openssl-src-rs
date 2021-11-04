@@ -21,6 +21,9 @@ exclude = [
 
 [features]
 default = []
+# Enables compilation of the legacy provider, which must be loaded at runtime to use various
+# uncommon or insecure algorithms.
+legacy = []
 # Enables compilation of some older algorithms: md2 (hash), rc5 (block cypher) and enabled use of
 # some weaker algorithms in SSL connections. These are generally not recommended for use.
 weak-crypto = []
