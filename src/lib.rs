@@ -65,7 +65,7 @@ impl Build {
             if target.contains("wasm") {
                 let mut cmd = Command::new("wasimake");
 
-                std::mem::replace(cmd.arg("make"),Command::new("wasimake"))
+                std::mem::replace(cmd.arg("make"), Command::new("wasimake"))
             } else {
                 Command::new("make")
             }
@@ -142,8 +142,8 @@ impl Build {
         if target.contains("wasm") {
             program = String::from("wasiconfigure");
         } else {
-            program =
-                env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
+            program = env::var("OPENSSL_SRC_PERL")
+                .unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
         }
 
         let mut configure = Command::new(program);
