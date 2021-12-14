@@ -53,6 +53,7 @@ impl Build {
 
     fn cmd_make(&self) -> Command {
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
+        let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         if host.contains("dragonfly")
             || host.contains("freebsd")
             || host.contains("openbsd")
@@ -61,7 +62,13 @@ impl Build {
         {
             Command::new("gmake")
         } else {
-            Command::new("make")
+            if target.contains("wasm") {
+                let mut cmd = Command::new("wasimake");
+
+                std::mem::replace(cmd.arg("make"),Command::new("wasimake"))
+            } else {
+                Command::new("make")
+            }
         }
     }
 
