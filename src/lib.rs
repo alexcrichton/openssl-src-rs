@@ -217,6 +217,19 @@ impl Build {
             configure.arg("no-stdio");
         }
 
+        if target.contains("wasm") {
+            configure.arg("no-threads");
+            configure.arg("no-asm");
+            configure.arg("no-sock");
+            configure.arg("no-afalgeng");
+            configure.arg("-DOPENSSL_SYS_NETWARE");
+            configure.arg("-DSIG_DFL=0");
+            configure.arg("-DSIG_IGN=0");
+            configure.arg("-DHAVE_FORK=0");
+            configure.arg("-DOPENSSL_NO_AFALGENG=1");
+            configure.arg("--with-rand-seed=getrandom");
+        }
+
         if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files.
             // ASM compiling will be enabled if nasm.exe is installed, unless
