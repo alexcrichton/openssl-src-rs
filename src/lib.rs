@@ -136,10 +136,17 @@ impl Build {
         let inner_dir = build_dir.join("src");
         fs::create_dir_all(&inner_dir).unwrap();
         cp_r(&source_dir(), &inner_dir);
+        let mut program = String::new();
 
-        let perl_program =
-            env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
-        let mut configure = Command::new(perl_program);
+        // use wasiconfigure when targeting wasm
+        if target.contains("wasm") {
+            program = String::from("wasiconfigure");
+        } else {
+            program =
+                env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
+        }
+
+        let mut configure = Command::new(program);
         configure.arg("./Configure");
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
@@ -162,7 +169,7 @@ impl Build {
             // Avoid multilib-postfix for build targets that specify it
             .arg("--libdir=lib");
 
-        if cfg!(not(feature = "legacy")) {
+        if cfg!(not(feature = "legacy")) && !target.contains("wasm") {
             configure.arg("no-legacy");
         }
 
