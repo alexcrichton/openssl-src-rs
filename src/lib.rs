@@ -218,8 +218,9 @@ impl Build {
         }
 
         if target.contains("wasm") {
+            // -no-threads we dont have thread support in WASI
             configure.arg("no-threads");
-            configure.arg("no-asm");
+            // -no-sock we dont have sockets in WASI
             configure.arg("no-sock");
             configure.arg("no-afalgeng");
             configure.arg("-DOPENSSL_SYS_NETWARE");
@@ -227,6 +228,7 @@ impl Build {
             configure.arg("-DSIG_IGN=0");
             configure.arg("-DHAVE_FORK=0");
             configure.arg("-DOPENSSL_NO_AFALGENG=1");
+            // --with-rand-seed=getrandom (needed to force using getentropy because WASI has no /dev/random or getrandom)
             configure.arg("--with-rand-seed=getrandom");
         }
 
