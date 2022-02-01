@@ -429,6 +429,44 @@ impl Build {
                 configure.arg("-D__STDC_NO_ATOMICS__");
             }
 
+            if target.contains("wasi") {
+                configure.args([
+                    // Termios isn't available whatsoever on WASM/WASI so we disable that
+                    "no-ui-console",
+                    // WASI doesn't support UNIX sockets so we preemptively disable it
+                    "no-sock",
+                    // WASI doesn't have a concept of syslog, so we disable it
+                    "-DNO_SYSLOG",
+                    // WASI doesn't support (p)threads. Disabling preemptively.
+                    "no-threads",
+                    // WASI/WASM aren't really friends with ASM, so we disable it as well.
+                    "no-asm",
+                    // Disables the AFALG engine (AFALG-ENGine)
+                    // Since AFALG depends on `AF_ALG` support on the linux kernel side
+                    // it makes sense that we can't use it.
+                    "no-afalgeng",
+                    "-DOPENSSL_NO_AFALGENG=1",
+                    // wasm lacks signal support; to enable minimal signal emulation, compile with
+                    // -D_WASI_EMULATED_SIGNAL and link with -lwasi-emulated-signal
+                    // The link argument is output in the `Artifacts::print_cargo_metadata` method
+                    "-D_WASI_EMULATED_SIGNAL",
+                    // WASI lacks process-associated clocks; to enable emulation of the `times` function using the wall
+                    // clock, which isn't sensitive to whether the program is running or suspended, compile with
+                    // -D_WASI_EMULATED_PROCESS_CLOCKS and link with -lwasi-emulated-process-clocks
+                    // The link argument is output in the `Artifacts::print_cargo_metadata` method
+                    "-D_WASI_EMULATED_PROCESS_CLOCKS",
+                    // WASI lacks a true mmap; to enable minimal mmap emulation, compile
+                    // with -D_WASI_EMULATED_MMAN and link with -lwasi-emulated-mman
+                    // The link argument is output in the `Artifacts::print_cargo_metadata` method
+                    "-D_WASI_EMULATED_MMAN",
+                    // WASI lacks process identifiers; to enable emulation of the `getpid` function using a
+                    // placeholder value, which doesn't reflect the host PID of the program, compile with
+                    // -D_WASI_EMULATED_GETPID and link with -lwasi-emulated-getpid
+                    // The link argument is output in the `Artifacts::print_cargo_metadata` method
+                    "-D_WASI_EMULATED_GETPID",
+                ]);
+            }
+
             if target.contains("musl") {
                 // Hack around openssl/openssl#7207 for now
                 configure.arg("-DOPENSSL_NO_SECURE_MEMORY");
@@ -579,6 +617,11 @@ impl Artifacts {
         println!("cargo:lib={}", self.lib_dir.display());
         if self.target.contains("msvc") {
             println!("cargo:rustc-link-lib=user32");
+        } else if self.target == "wasm32-wasi" {
+            println!("cargo:rustc-link-lib=wasi-emulated-signal");
+            println!("cargo:rustc-link-lib=wasi-emulated-process-clocks");
+            println!("cargo:rustc-link-lib=wasi-emulated-mman");
+            println!("cargo:rustc-link-lib=wasi-emulated-getpid");
         }
     }
 }

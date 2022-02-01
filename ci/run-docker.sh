@@ -22,5 +22,5 @@ docker run \
   --env CARGO_HOME=/cargo \
   --workdir /usr/code \
   openssl-src-ci \
-  bash -c "PATH=\$PATH:/rust/bin ci/run.sh $target"
+  bash -c "PATH=\"\$PATH:/rust/bin:/cargo/bin\" ci/run.sh $target"
 

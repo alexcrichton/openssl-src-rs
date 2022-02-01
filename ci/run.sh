@@ -2,17 +2,17 @@
 
 target=$1
 testcrate_dir="$(pwd)/testcrate"
+
 set -ex
 
-if [ "$1" = "aarch64-apple-darwin" ] ; then
-  export CARGO_TARGET_AARCH64_APPLE_DARWIN_RUNNER=echo
-fi
+export CARGO_TARGET_AARCH64_APPLE_DARWIN_RUNNER=echo
+export CARGO_TARGET_WASM32_WASI_RUNNER=wasmtime
 
-cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv
-cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --release
+cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $target -vvv
+cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $target -vvv --release
 
 if [ "$1" = "x86_64-unknown-linux-gnu" ] ; then
-  cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $1 -vv --all-features
+  cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $target -vvv --all-features
 
   # Run a few tests here:
   #
@@ -35,5 +35,5 @@ if [ "$1" = "x86_64-unknown-linux-gnu" ] ; then
   rm "$crate"
   cd target/ci/package/openssl-src-*
   cp -r "$testcrate_dir" .
-  cargo test --manifest-path "testcrate/Cargo.toml" --target $1 -vv
+  cargo test --manifest-path "testcrate/Cargo.toml" --target $target -vv
 fi
