@@ -534,7 +534,12 @@ impl Build {
 
     fn run_command(&self, mut command: Command, desc: &str) {
         println!("running {:?}", command);
-        let status = command.status().unwrap();
+        let status = match command.status() {
+            Ok(value) => value,
+            Err(error) => {
+                panic!("Error running command => {:?}", error);
+            }
+        };
         if !status.success() {
             panic!(
                 "
@@ -577,9 +582,20 @@ fn cp_r(src: &Path, dst: &Path) {
 
 fn sanitize_sh(path: &Path) -> String {
     if !cfg!(windows) {
-        return path.to_str().unwrap().to_string();
+        return match path.to_str() {
+            Some(value) => value.to_string(),
+            None => {
+                panic!("Failed to convert path to string: {:?}", &path);
+            }
+        };
     }
-    let path = path.to_str().unwrap().replace("\\", "/");
+
+    let path = match path.to_str() {
+        Some(value) => value.replace("\\", "/"),
+        None => {
+            panic!("Failed to convert path to string: {:?}", &path);
+        }
+    };
     return change_drive(&path).unwrap_or(path);
 
     fn change_drive(s: &str) -> Option<String> {
