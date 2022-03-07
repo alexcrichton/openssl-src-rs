@@ -534,21 +534,25 @@ impl Build {
 
     fn run_command(&self, mut command: Command, desc: &str) {
         println!("running {:?}", command);
-        let status = command.status().unwrap();
-        if !status.success() {
-            panic!(
-                "
+        let status = command.status();
+
+        let (status_or_failed, error) = match status {
+            Ok(status) if status.success() => return,
+            Ok(status) => ("Exit status", format!("{}", status)),
+            Err(failed) => ("Failed to execute", format!("{}", failed)),
+        };
+        panic!(
+            "
 
 
 Error {}:
     Command: {:?}
-    Exit status: {}
+    {}: {}
 
 
     ",
-                desc, command, status
-            );
-        }
+            desc, command, status_or_failed, error
+        );
     }
 }
 
