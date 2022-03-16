@@ -64,10 +64,10 @@ jobs:
         #   os: ubuntu-latest
         - target: i686-pc-windows-msvc
           rust: stable-i686-msvc
-          os: windows-2016
+          os: windows-2019
         - target: i686-pc-windows-msvc
           rust: stable-i686-msvc
-          os: windows-2016
+          os: windows-2019
           crt_static: yes
         - target: x86_64-pc-windows-msvc
           rust: stable-x86_64-msvc
