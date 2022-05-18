@@ -34,6 +34,7 @@ seed = []
 
 [workspace]
 members = ['testcrate']
+exclude = ['target']
 
 [dependencies]
 cc = "1.0"
