@@ -135,10 +135,21 @@ impl Build {
             env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
         let mut configure = Command::new(perl_program);
         configure.arg("./Configure");
+
+        // Change the install directory to happen inside of the build directory.
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
+        }
+
+        // Specify that openssl directory where things are loaded at runtime is
+        // not inside our build directory. Instead this should be located in the
+        // default locations of the OpenSSL build scripts.
+        if target.contains("windows") {
+            configure.arg("--openssldir=SYS$MANAGER:[OPENSSL]");
+        } else {
+            configure.arg("--openssldir=/usr/local/ssl");
         }
 
         configure
