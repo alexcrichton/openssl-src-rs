@@ -194,11 +194,7 @@ impl Build {
             configure.arg("no-seed");
         }
 
-        if target.contains("musl") {
-            // This actually fails to compile on musl (it needs linux/version.h
-            // right now) but we don't actually need this most of the time.
-            configure.arg("no-engine");
-        } else if target.contains("windows") {
+        if target.contains("windows") {
             // We can build the engine feature, but the build doesn't seem
             // to correctly pick up crypt32.lib functions such as
             // `__imp_CertOpenStore` when building the capieng engine.
