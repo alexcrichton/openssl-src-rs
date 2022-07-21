@@ -17,7 +17,6 @@ pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
     host: Option<String>,
-    force_engine: bool,
 }
 
 pub struct Artifacts {
@@ -34,7 +33,6 @@ impl Build {
             out_dir: env::var_os("OUT_DIR").map(|s| PathBuf::from(s).join("openssl-build")),
             target: env::var("TARGET").ok(),
             host: env::var("HOST").ok(),
-            force_engine: false,
         }
     }
 
@@ -50,11 +48,6 @@ impl Build {
 
     pub fn host(&mut self, host: &str) -> &mut Build {
         self.host = Some(host.to_string());
-        self
-    }
-
-    pub fn force_engine(&mut self) -> &mut Build {
-        self.force_engine = true;
         self
     }
 
@@ -204,8 +197,8 @@ impl Build {
         if target.contains("musl") {
             // The engine module fails compile on musl (it needs linux/version.h
             // right now) but we don't actually need this most of the time, so
-            // disable it unless force option is specified.
-            if !self.force_engine {
+            // disable it unless force-engine feature is specified.
+            if !cfg!(feature = "force-engine") {
                 configure.arg("no-engine");
             }
         } else if target.contains("windows") {
