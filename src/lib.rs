@@ -17,6 +17,7 @@ pub struct Build {
     out_dir: Option<PathBuf>,
     target: Option<String>,
     host: Option<String>,
+    force_engine: bool,
 }
 
 pub struct Artifacts {
@@ -33,6 +34,7 @@ impl Build {
             out_dir: env::var_os("OUT_DIR").map(|s| PathBuf::from(s).join("openssl-build")),
             target: env::var("TARGET").ok(),
             host: env::var("HOST").ok(),
+            force_engine: false,
         }
     }
 
@@ -48,6 +50,11 @@ impl Build {
 
     pub fn host(&mut self, host: &str) -> &mut Build {
         self.host = Some(host.to_string());
+        self
+    }
+
+    pub fn force_engine(&mut self) -> &mut Build {
+        self.force_engine = true;
         self
     }
 
@@ -194,7 +201,14 @@ impl Build {
             configure.arg("no-seed");
         }
 
-        if target.contains("windows") {
+        if target.contains("musl") {
+            // The engine module fails compile on musl (it needs linux/version.h
+            // right now) but we don't actually need this most of the time, so
+            // disable it unless force option is specified.
+            if !self.force_engine {
+                configure.arg("no-engine");
+            }
+        } else if target.contains("windows") {
             // We can build the engine feature, but the build doesn't seem
             // to correctly pick up crypt32.lib functions such as
             // `__imp_CertOpenStore` when building the capieng engine.
