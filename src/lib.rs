@@ -165,7 +165,12 @@ impl Build {
             .arg("no-zlib")
             .arg("no-zlib-dynamic");
 
-        if cfg!(not(feature = "weak-crypto")) {
+        if cfg!(feature = "weak-crypto") {
+            configure
+                .arg("enable-md2")
+                .arg("enable-rc5")
+                .arg("enable-weak-ssl-ciphers");
+        } else {
             configure
                 .arg("no-md2")
                 .arg("no-rc5")
