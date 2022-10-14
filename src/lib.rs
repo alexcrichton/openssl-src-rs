@@ -148,7 +148,8 @@ impl Build {
         if target.contains("windows") {
             configure.arg("--openssldir=SYS$MANAGER:[OPENSSL]");
         } else {
-            configure.arg("--openssldir=/usr/local/ssl");
+            let openssldir = env::var("OPENSSL_DIR").unwrap_or("/usr/local/ssl".to_string());
+            configure.arg(&format!("--openssldir={}", openssldir));
         }
 
         configure
