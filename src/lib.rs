@@ -346,15 +346,25 @@ impl Build {
             configure.env_remove("CROSS_COMPILE");
 
             // Infer ar/ranlib tools from cross compilers if the it looks like
-            // we're doing something like `foo-gcc` route that to `foo-ranlib`
-            // as well.
+            // we're doing something like `foo-gcc` route that to `foo-gcc-ranlib`
+            // or `foo-ranlib` (for `binutils`) as well.
             if path.ends_with("-gcc") && !target.contains("unknown-linux-musl") {
-                let path = &path[..path.len() - 4];
-                if env::var_os("RANLIB").is_none() {
-                    configure.env("RANLIB", format!("{}-ranlib", path));
-                }
-                if env::var_os("AR").is_none() {
-                    configure.env("AR", format!("{}-ar", path));
+                let suffix = &path[path.len() - 4..];
+                let path = &path[..path.len() - suffix.len()];
+                for &tool in &["RANLIB", "AR"] {
+                    if env::var_os(tool).is_some() {
+                        // Respect what came before.
+                        break;
+                    }
+
+                    for &infix in &[suffix, ""] {
+                        let candidate = format!("{}{}-{}", path, infix, tool.to_lowercase());
+                        // Only choose a tool if it's actually executable
+                        if Command::new(&candidate).output().is_ok() {
+                            configure.env(tool, candidate);
+                            break;
+                        }
+                    }
                 }
             }
 
