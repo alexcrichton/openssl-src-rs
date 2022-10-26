@@ -346,15 +346,16 @@ impl Build {
             configure.env_remove("CROSS_COMPILE");
 
             // Infer ar/ranlib tools from cross compilers if the it looks like
-            // we're doing something like `foo-gcc` route that to `foo-ranlib`
+            // we're doing something like `foo-gcc` route that to `foo-gcc-ranlib`
             // as well.
             if path.ends_with("-gcc") && !target.contains("unknown-linux-musl") {
-                let path = &path[..path.len() - 4];
+                let suffix = &path[path.len() - 4..];
+                let path = &path[..path.len() - suffix.len()];
                 if env::var_os("RANLIB").is_none() {
-                    configure.env("RANLIB", format!("{}-ranlib", path));
+                    configure.env("RANLIB", format!("{}{}-ranlib", path, suffix));
                 }
                 if env::var_os("AR").is_none() {
-                    configure.env("AR", format!("{}-ar", path));
+                    configure.env("AR", format!("{}{}-ar", path, suffix));
                 }
             }
 
