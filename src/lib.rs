@@ -357,7 +357,7 @@ impl Build {
                         break;
                     }
 
-                    for &infix in &[suffix, ""] {
+                    for &infix in &["", suffix] {
                         let candidate = format!("{}{}-{}", path, infix, tool.to_lowercase());
                         // Only choose a tool if it's actually executable
                         if Command::new(&candidate).output().is_ok() {
