@@ -1,6 +1,7 @@
 extern crate cc;
 
 use std::env;
+use std::ffi::OsStr;
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -345,17 +346,25 @@ impl Build {
             // prefix, we unset `CROSS_COMPILE` for `./Configure`.
             configure.env_remove("CROSS_COMPILE");
 
-            // Infer ar/ranlib tools from cross compilers if the it looks like
-            // we're doing something like `foo-gcc` route that to `foo-ranlib`
-            // as well.
-            if path.ends_with("-gcc") && !target.contains("unknown-linux-musl") {
-                let path = &path[..path.len() - 4];
-                if env::var_os("RANLIB").is_none() {
-                    configure.env("RANLIB", format!("{}-ranlib", path));
-                }
-                if env::var_os("AR").is_none() {
-                    configure.env("AR", format!("{}-ar", path));
-                }
+            let ar = cc.get_archiver();
+            configure.env("AR", ar.get_program());
+            if ar.get_args().count() == 0 {
+                // On some platforms (like emscripten on windows), the ar to use may not be a
+                // single binary, but instead a multi-argument command like `cmd /c emar.bar`.
+                // We can't convey that through `AR` alone, and so also need to set ARFLAGS.
+                configure.env(
+                    "ARFLAGS",
+                    ar.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
+                );
+            }
+            let ranlib = cc.get_ranlib();
+            configure.env("RANLIB", ranlib.get_program());
+            if ranlib.get_args().count() == 0 {
+                // Same thing as for AR -- we may need to set RANLIBFLAGS
+                configure.env(
+                    "RANLIBFLAGS",
+                    ranlib.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
+                );
             }
 
             // Make sure we pass extra flags like `-ffunction-sections` and
