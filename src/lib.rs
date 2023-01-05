@@ -299,6 +299,7 @@ impl Build {
             "wasm32-wasi" => "gcc",
             "aarch64-apple-ios" => "ios64-cross",
             "x86_64-apple-ios" => "iossimulator-xcrun",
+            "aarch64-apple-ios-sim" => "iossimulator-xcrun",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
