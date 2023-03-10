@@ -1,7 +1,7 @@
 extern crate cc;
 
 use std::env;
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -330,16 +330,15 @@ impl Build {
                 // On some platforms (like emscripten on windows), the ar to use may not be a
                 // single binary, but instead a multi-argument command like `cmd /c emar.bar`.
                 // We can't convey that through `AR` alone, and so also need to set ARFLAGS.
-                configure.env(
-                    "ARFLAGS",
-                    ar.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
-                );
+                configure.env("ARFLAGS", join_args(ar.get_args()));
             }
             let ranlib = cc.get_ranlib();
-            // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
-            let mut args = vec![ranlib.get_program()];
-            args.extend(ranlib.get_args());
-            configure.env("RANLIB", args.join(OsStr::new(" ")));
+            if ranlib.get_args().count() != 0 {
+                // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
+                let rancmd =
+                    IntoIterator::into_iter([ranlib.get_program()]).chain(ranlib.get_args());
+                configure.env("RANLIB", join_args(rancmd));
+            }
 
             // Make sure we pass extra flags like `-ffunction-sections` and
             // other things like ARM codegen flags.
@@ -560,6 +559,17 @@ fn apply_patches_musl(target: &str, inner: &Path) {
         .replace("__NR_getrandom", "SYS_getrandom");
 
     fs::write(path, buf).unwrap();
+}
+
+fn join_args<'a>(args: impl Iterator<Item = &'a OsStr>) -> OsString {
+    let mut output = OsString::new();
+    for arg in args {
+        if !output.is_empty() {
+            output.push(" ");
+        }
+        output.push(arg);
+    }
+    output
 }
 
 fn sanitize_sh(path: &Path) -> String {
