@@ -326,7 +326,7 @@ impl Build {
 
             let ar = cc.get_archiver();
             configure.env("AR", ar.get_program());
-            if ar.get_args().count() == 0 {
+            if ar.get_args().count() != 0 {
                 // On some platforms (like emscripten on windows), the ar to use may not be a
                 // single binary, but instead a multi-argument command like `cmd /c emar.bar`.
                 // We can't convey that through `AR` alone, and so also need to set ARFLAGS.
@@ -336,14 +336,10 @@ impl Build {
                 );
             }
             let ranlib = cc.get_ranlib();
-            configure.env("RANLIB", ranlib.get_program());
-            if ranlib.get_args().count() == 0 {
-                // Same thing as for AR -- we may need to set RANLIBFLAGS
-                configure.env(
-                    "RANLIBFLAGS",
-                    ranlib.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
-                );
-            }
+            // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
+            let mut args = vec![ranlib.get_program()];
+            args.extend(ranlib.get_args());
+            configure.env("RANLIB", args.join(OsStr::new(" ")));
 
             // Make sure we pass extra flags like `-ffunction-sections` and
             // other things like ARM codegen flags.
