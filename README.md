@@ -9,7 +9,6 @@ much!
 There are currently two maintained branches, matching the
 two [maintained OpenSSL versions](https://www.openssl.org/policies/releasestrat.html):
 * `main` which builds OpenSSL 3.1
-* `release/300` which builds OpenSSL 3.0
 * `release/111` which builds OpenSSL 1.1.1
 
 The crates versions follow the `X.Y.Z+B` pattern:
