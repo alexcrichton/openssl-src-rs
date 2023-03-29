@@ -17,6 +17,10 @@ exclude = [
   'openssl/test/recipes/*',
   'openssl/gost-engine/*',
   'openssl/demos/*',
+  'openssl/tlslite-ng/*',
+  'openssl/tlsfuzzer/*',
+  'openssl/python-ecdsa/*',
+  'openssl/oqs-provider/*',
 ]
 
 [features]
