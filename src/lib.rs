@@ -279,6 +279,7 @@ impl Build {
             "i686-unknown-linux-musl" => "linux-elf",
             "i686-unknown-netbsd" => "BSD-x86-elf",
             "i686-uwp-windows-msvc" => "VC-WIN32-UWP",
+            "loongarch64-unknown-linux-gnu" => "linux64-loongarch64",
             "mips-unknown-linux-gnu" => "linux-mips32",
             "mips-unknown-linux-musl" => "linux-mips32",
             "mips64-unknown-linux-gnuabi64" => "linux64-mips64",
