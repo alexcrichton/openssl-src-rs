@@ -32,18 +32,18 @@ jobs:
         - target: aarch64-apple-darwin
           rust: nightly
           os: macos-latest
-        #- target: arm-linux-androideabi
-        #  rust: stable
-        #  os: ubuntu-latest
-        #- target: aarch64-linux-android
-        #  rust: stable
-        #  os: ubuntu-latest
-        #- target: i686-linux-android
-        #  rust: stable
-        #  os: ubuntu-latest
-        #- target: x86_64-linux-android
-        #  rust: stable
-        #  os: ubuntu-latest
+        - target: arm-linux-androideabi
+          rust: stable
+          os: ubuntu-latest
+        - target: aarch64-linux-android
+          rust: stable
+          os: ubuntu-latest
+        - target: i686-linux-android
+          rust: stable
+          os: ubuntu-latest
+        - target: x86_64-linux-android
+          rust: stable
+          os: ubuntu-latest
         - target: i686-unknown-linux-gnu
           rust: stable
           os: ubuntu-latest
