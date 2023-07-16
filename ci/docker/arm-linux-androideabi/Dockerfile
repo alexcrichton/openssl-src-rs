@@ -8,7 +8,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
   python \
   unzip \
   gcc \
-  libc6-dev
+  libc6-dev \
+  libunwind-dev
 
 RUN curl -O https://dl.google.com/android/repository/android-ndk-r15b-linux-x86_64.zip
 RUN unzip -q android-ndk-r15b-linux-x86_64.zip
