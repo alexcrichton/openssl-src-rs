@@ -649,6 +649,8 @@ impl Artifacts {
         println!("cargo:lib={}", self.lib_dir.display());
         if self.target.contains("msvc") {
             println!("cargo:rustc-link-lib=user32");
+        } else if self.target == "arm-unknown-linux-gnueabihf" {
+            println!("cargo:rustc-link-lib=atomic");
         } else if self.target == "wasm32-wasi" {
             println!("cargo:rustc-link-lib=wasi-emulated-signal");
             println!("cargo:rustc-link-lib=wasi-emulated-process-clocks");
