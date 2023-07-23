@@ -25,6 +25,7 @@ pub struct Artifacts {
     lib_dir: PathBuf,
     bin_dir: PathBuf,
     libs: Vec<String>,
+    dylibs: Vec<String>,
     target: String,
 }
 
@@ -549,6 +550,21 @@ impl Build {
             vec!["ssl".to_string(), "crypto".to_string()]
         };
 
+        let dylibs = if target.contains("msvc") {
+            vec!["user32".to_string()]
+        //} else if target == "arm-unknown-linux-gnueabihf" {
+        //    vec!["atomic".to_string()]
+        } else if target == "wasm32-wasi" {
+            vec![
+                "wasi-emulated-signal".to_string(),
+                "wasi-emulated-process-clocks".to_string(),
+                "wasi-emulated-mman".to_string(),
+                "wasi-emulated-getpid".to_string(),
+            ]
+        } else {
+            vec![]
+        };
+
         fs::remove_dir_all(&inner_dir).unwrap();
 
         Artifacts {
@@ -556,6 +572,7 @@ impl Build {
             bin_dir: install_dir.join("bin"),
             include_dir: install_dir.join("include"),
             libs: libs,
+            dylibs: dylibs,
             target: target.to_string(),
         }
     }
@@ -645,15 +662,10 @@ impl Artifacts {
         for lib in self.libs.iter() {
             println!("cargo:rustc-link-lib=static={}", lib);
         }
+        for lib in self.dylibs.iter() {
+            println!("cargo:rustc-link-lib={}", lib);
+        }
         println!("cargo:include={}", self.include_dir.display());
         println!("cargo:lib={}", self.lib_dir.display());
-        if self.target.contains("msvc") {
-            println!("cargo:rustc-link-lib=user32");
-        } else if self.target == "wasm32-wasi" {
-            println!("cargo:rustc-link-lib=wasi-emulated-signal");
-            println!("cargo:rustc-link-lib=wasi-emulated-process-clocks");
-            println!("cargo:rustc-link-lib=wasi-emulated-mman");
-            println!("cargo:rustc-link-lib=wasi-emulated-getpid");
-        }
     }
 }

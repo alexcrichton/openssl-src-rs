@@ -16,4 +16,4 @@ required-features = ['package']
 package = ['tar', 'flate2']
 
 [build-dependencies]
-openssl-src = { path = ".." }
+openssl-src = { path = "..", features = ["legacy"] }
