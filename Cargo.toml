@@ -40,6 +40,8 @@ idea = []
 # Enables compilation of SEED, a symmetric key block cypher mostly used in South Korea, but
 # otherwise not widely supported.
 seed = []
+# Forces configuring Engine module support.
+force-engine = []
 
 [workspace]
 members = ['testcrate']
