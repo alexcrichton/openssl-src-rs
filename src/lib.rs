@@ -293,6 +293,7 @@ impl Build {
             "mipsel-unknown-linux-musl" => "linux-mips32",
             "powerpc-unknown-freebsd" => "BSD-ppc",
             "powerpc-unknown-linux-gnu" => "linux-ppc",
+            "powerpc-unknown-linux-gnuspe" => "linux-ppc",
             "powerpc-unknown-netbsd" => "BSD-generic32",
             "powerpc64-unknown-freebsd" => "BSD-ppc64",
             "powerpc64-unknown-linux-gnu" => "linux-ppc64",
