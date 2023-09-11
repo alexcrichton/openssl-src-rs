@@ -6,15 +6,13 @@ much!
 
 ## Versioning
 
-There are currently two maintained branches, matching the
-two [maintained OpenSSL versions](https://www.openssl.org/policies/releasestrat.html):
-* `main` which builds OpenSSL 3.1
-* `release/111` which builds OpenSSL 1.1.1
+This crate follows the latest minor and patch versions for each maintained major version,
+according to the [OpenSSL release strategy](https://www.openssl.org/policies/releasestrat.html).
+It has no specific support for LTS versions.
 
-The crates versions follow the `X.Y.Z+B` pattern:
-* The major version `X` is the upstream OpenSSL version:
-  * `111` for 1.1.1
-  * `300` for 3.0 (to be higher than `111`)
+The crate versions follow the `X.Y.Z+B` pattern:
+* The major version `X` is the upstream OpenSSL API/ABI compatibility version:
+  * `300` for 3.Y.Z
 * The minor `Y` and patch `Z` versions are incremented when making changes
   to the crate, either OpenSSL update or internal changes.
 * `B` contains the full upstream OpenSSL version, like `1.1.1k` or `3.0.7`.
