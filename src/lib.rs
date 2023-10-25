@@ -505,6 +505,8 @@ impl Build {
                     // -D_WASI_EMULATED_GETPID and link with -lwasi-emulated-getpid
                     // The link argument is output in the `Artifacts::print_cargo_metadata` method
                     "-D_WASI_EMULATED_GETPID",
+                    // WASI doesn't have chmod right now, so don't try to use it.
+                    "-DNO_CHMOD",
                 ]);
             }
 
