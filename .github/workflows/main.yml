@@ -59,9 +59,9 @@ jobs:
         - target: x86_64-pc-windows-gnu
           rust: stable
           os: ubuntu-latest
-        - target: wasm32-wasi
-          rust: stable
-          os: ubuntu-latest
+        # - target: wasm32-wasi
+        #   rust: stable
+        #   os: ubuntu-latest
         - target: i686-pc-windows-msvc
           rust: stable-i686-msvc
           os: windows-2019

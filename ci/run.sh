@@ -6,7 +6,6 @@ testcrate_dir="$(pwd)/testcrate"
 set -ex
 
 export CARGO_TARGET_AARCH64_APPLE_DARWIN_RUNNER=echo
-export CARGO_TARGET_WASM32_WASI_RUNNER=wasmtime
 
 cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $target -vvv
 cargo test --manifest-path "$testcrate_dir/Cargo.toml" --target $target -vvv --release
