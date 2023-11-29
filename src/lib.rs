@@ -140,7 +140,10 @@ impl Build {
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
         } else if host.contains("pc-windows-msvc") {
-            configure.arg(&format!("--prefix={}", install_dir.to_str().unwrap().replace("\\", "/")));
+            configure.arg(&format!(
+                "--prefix={}",
+                install_dir.to_str().unwrap().replace("\\", "/")
+            ));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
         }
