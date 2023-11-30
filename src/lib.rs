@@ -139,6 +139,15 @@ impl Build {
         // Change the install directory to happen inside of the build directory.
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
+        } else if host.contains("pc-windows-msvc") {
+            // On Windows, the prefix argument does not support \ path seperators
+            // when cross compiling.
+            // Always use / as a path seperator instead of \, since that works for both
+            // native and cross builds.
+            configure.arg(&format!(
+                "--prefix={}",
+                install_dir.to_str().unwrap().replace("\\", "/")
+            ));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
         }
