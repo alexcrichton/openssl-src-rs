@@ -1,6 +1,6 @@
 [package]
 name = "openssl-src"
-version = "300.1.6+3.1.4"
+version = "300.2.0+3.2.0"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
@@ -21,6 +21,8 @@ exclude = [
   'openssl/tlsfuzzer/*',
   'openssl/python-ecdsa/*',
   'openssl/oqs-provider/*',
+  'openssl/cloudflare-quiche/*',
+  'openssl/tlslite-ng/*',
 # The current upload size limit for *.crate files is 10MB. Therefore, exclude
 # some unused documentation to meet this constraint.
   'openssl/doc/man{3,5,7}',
