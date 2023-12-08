@@ -686,8 +686,9 @@ impl Artifacts {
         }
         println!("cargo:include={}", self.include_dir.display());
         println!("cargo:lib={}", self.lib_dir.display());
-        if self.target.contains("msvc") {
+        if self.target.contains("windows") {
             println!("cargo:rustc-link-lib=user32");
+            println!("cargo:rustc-link-lib=crypt32");
         } else if self.target == "wasm32-wasi" {
             println!("cargo:rustc-link-lib=wasi-emulated-signal");
             println!("cargo:rustc-link-lib=wasi-emulated-process-clocks");
