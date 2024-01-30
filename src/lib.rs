@@ -636,12 +636,21 @@ fn cp_r(src: &Path, dst: &Path) {
         }
 
         let dst = dst.join(name);
-        if f.file_type().unwrap().is_dir() {
+        let ty = f.file_type().unwrap();
+        if ty.is_dir() {
             fs::create_dir_all(&dst).unwrap();
             cp_r(&path, &dst);
+        } else if ty.is_symlink() {
+            // not needed to build
+            if path.iter().any(|p| p == "cloudflare-quiche") {
+                continue;
+            }
+            panic!("can't copy symlink {path:?}");
         } else {
             let _ = fs::remove_file(&dst);
-            fs::copy(&path, &dst).unwrap();
+            if let Err(e) = fs::copy(&path, &dst) {
+                panic!("failed to copy {path:?} to {dst:?}: {e}");
+            }
         }
     }
 }
