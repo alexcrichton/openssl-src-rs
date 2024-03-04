@@ -265,6 +265,7 @@ impl Build {
             "i686-unknown-linux-gnu" => "linux-elf",
             "i686-unknown-linux-musl" => "linux-elf",
             "loongarch64-unknown-linux-gnu" => "linux-generic64",
+            "loongarch64-unknown-linux-musl" => "linux-generic64",
             "mips-unknown-linux-gnu" => "linux-mips32",
             "mips-unknown-linux-musl" => "linux-mips32",
             "mips64-unknown-linux-gnuabi64" => "linux64-mips64",
