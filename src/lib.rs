@@ -219,6 +219,10 @@ impl Build {
             configure.arg("no-seed");
         }
 
+        if cfg!(feature = "ktls") {
+            configure.arg("enable-ktls");
+        }
+
         if target.contains("musl") {
             // Engine module fails to compile on musl (it needs linux/version.h
             // right now) but we don't actually need this most of the time.
