@@ -645,12 +645,9 @@ fn cp_r(src: &Path, dst: &Path) {
         if ty.is_dir() {
             fs::create_dir_all(&dst).unwrap();
             cp_r(&path, &dst);
-        } else if ty.is_symlink() {
+        } else if ty.is_symlink() && path.iter().any(|p| p == "cloudflare-quiche") {
             // not needed to build
-            if path.iter().any(|p| p == "cloudflare-quiche") {
-                continue;
-            }
-            panic!("can't copy symlink {path:?}");
+            continue;
         } else {
             let _ = fs::remove_file(&dst);
             if let Err(e) = fs::copy(&path, &dst) {
