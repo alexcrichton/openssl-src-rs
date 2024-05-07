@@ -147,7 +147,7 @@ impl Build {
         // Change the install directory to happen inside of the build directory.
         if host.contains("pc-windows-gnu") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
-        } else if host.contains("pc-windows-msvc") {
+        } else if host.contains("pc-windows-msvc") || host.contains("win7-windows-msvc") {
             // On Windows, the prefix argument does not support \ path seperators
             // when cross compiling.
             // Always use / as a path seperator instead of \, since that works for both
@@ -308,6 +308,7 @@ impl Build {
             "i686-linux-android" => "linux-elf",
             "i686-pc-windows-gnu" => "mingw",
             "i686-pc-windows-msvc" => "VC-WIN32",
+            "i686-win7-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
             "i686-unknown-haiku" => "haiku-x86",
             "i686-unknown-linux-gnu" => "linux-elf",
@@ -351,6 +352,7 @@ impl Build {
             "x86_64-linux" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
+            "x86_64-win7-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
             "x86_64-unknown-dragonfly" => "BSD-x86_64",
             "x86_64-unknown-haiku" => "haiku-x86_64",
