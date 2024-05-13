@@ -370,6 +370,9 @@ impl Build {
             "aarch64-apple-ios" => "ios64-cross",
             "x86_64-apple-ios" => "iossimulator-xcrun",
             "aarch64-apple-ios-sim" => "iossimulator-xcrun",
+            "aarch64-unknown-linux-ohos" => "linux-aarch64",
+            "armv7-unknown-linux-ohos" => "linux-generic32",
+            "x86_64-unknown-linux-ohos" => "linux-x86_64",
             _ => panic!("don't know how to configure OpenSSL for {}", target),
         };
 
