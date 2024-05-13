@@ -597,8 +597,15 @@ impl Build {
 
         fs::remove_dir_all(&inner_dir).unwrap();
 
+        let mut lib_dir: PathBuf = install_dir.join("lib");
+        // OpenSSL 3.0 now puts it's libraries in lib64/ by default,
+        // check for both it and lib/.
+        if install_dir.join("lib64").exists() {
+            lib_dir = install_dir.join("lib64")
+        }
+
         Artifacts {
-            lib_dir: install_dir.join("lib"),
+            lib_dir: lib_dir,
             bin_dir: install_dir.join("bin"),
             include_dir: install_dir.join("include"),
             libs: libs,
