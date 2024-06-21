@@ -387,7 +387,11 @@ impl Build {
             let mut cc = cc::Build::new();
             cc.target(target).host(host).warnings(false).opt_level(2);
             let compiler = cc.get_compiler();
-            configure.env("CC", compiler.path());
+            let mut cc_env = compiler.cc_env();
+            if cc_env.is_empty() {
+                cc_env = compiler.path().to_path_buf().into_os_string();
+            }
+            configure.env("CC", cc_env);
             let path = compiler.path().to_str().unwrap();
 
             // Both `cc::Build` and `./Configure` take into account
