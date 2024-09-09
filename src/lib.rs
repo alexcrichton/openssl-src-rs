@@ -358,6 +358,7 @@ impl Build {
             "x86_64-linux-android" => "linux-x86_64",
             "x86_64-linux" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
+            "x86_64-pc-windows-gnullvm" => "mingw64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
             "x86_64-win7-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
