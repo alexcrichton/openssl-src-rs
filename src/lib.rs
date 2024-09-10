@@ -178,7 +178,6 @@ impl Build {
 
         configure
             // No shared objects, we just want static libraries
-            .arg("no-dso")
             .arg("no-shared")
             // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
             .arg("no-ssl3")
@@ -190,6 +189,15 @@ impl Build {
             .arg("no-zlib-dynamic")
             // Avoid multilib-postfix for build targets that specify it
             .arg("--libdir=lib");
+
+        if cfg!(feature = "no-dso") {
+            // engine requires DSO support
+            if cfg!(feature = "force-engine") {
+                println!("Feature 'force-engine' requires DSO, ignoring 'no-dso' feature.");
+            } else {
+                configure.arg("no-dso");
+            }
+        }
 
         if cfg!(not(feature = "legacy")) {
             configure.arg("no-legacy");
