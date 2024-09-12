@@ -283,6 +283,7 @@ impl Build {
             // out and say it's linux and hope it works.
             "aarch64-linux-android" => "linux-aarch64",
             "aarch64-unknown-freebsd" => "BSD-generic64",
+            "aarch64-unknown-openbsd" => "BSD-generic64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
             "aarch64-unknown-linux-musl" => "linux-aarch64",
             "aarch64-alpine-linux-musl" => "linux-aarch64",
