@@ -637,23 +637,25 @@ impl Build {
         println!("running {:?}", command);
         let status = command.status();
 
-        let (status_or_failed, error) = match status {
+        let verbose_error = match status {
             Ok(status) if status.success() => return,
-            Ok(status) => ("Exit status", format!("{}", status)),
-            Err(failed) => ("Failed to execute", format!("{}", failed)),
+            Ok(status) => format!("'{exe}' reported failure with {status}", exe = command.get_program().to_string_lossy()),
+            Err(failed) => match failed.kind() {
+                std::io::ErrorKind::NotFound => format!("Command '{exe}' not found. Is {exe} installed?", exe = command.get_program().to_string_lossy()),
+                _ => format!("Could not run '{exe}', because {failed}", exe = command.get_program().to_string_lossy()),
+            }
         };
+        println!("cargo:warning={desc}: {verbose_error}");
         panic!(
             "
 
 
-Error {}:
-    Command: {:?}
-    {}: {}
+Error {desc}:
+    {verbose_error}
+    Command failed: {command:?}
 
 
-    ",
-            desc, command, status_or_failed, error
-        );
+");
     }
 }
 
