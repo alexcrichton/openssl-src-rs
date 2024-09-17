@@ -75,6 +75,7 @@ impl Build {
     }
 
     #[cfg(windows)]
+    #[track_caller]
     fn check_env_var(&self, var_name: &str) -> Option<bool> {
         env::var_os(var_name).map(|s| {
             if s == "1" {
@@ -631,6 +632,7 @@ impl Build {
         }
     }
 
+    #[track_caller]
     fn run_command(&self, mut command: Command, desc: &str) {
         println!("running {:?}", command);
         let status = command.status();
@@ -655,6 +657,7 @@ Error {}:
     }
 }
 
+#[track_caller]
 fn cp_r(src: &Path, dst: &Path) {
     for f in fs::read_dir(src).unwrap() {
         let f = f.unwrap();
