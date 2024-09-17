@@ -122,7 +122,15 @@ impl Build {
         false
     }
 
+    #[track_caller]
     pub fn build(&mut self) -> Artifacts {
+        match self.try_build() {
+            Ok(a) => a,
+            Err(e) => panic!("\n\n\n{e}\n\n\n"),
+        }
+    }
+
+    pub fn try_build(&mut self) -> Result<Artifacts, String> {
         let target = &self.target.as_ref().expect("TARGET dir not set")[..];
         let host = &self.host.as_ref().expect("HOST dir not set")[..];
         let out_dir = self.out_dir.as_ref().expect("OUT_DIR not set");
@@ -575,7 +583,7 @@ impl Build {
 
         // And finally, run the perl configure script!
         configure.current_dir(&inner_dir);
-        self.run_command(configure, "configuring OpenSSL build");
+        self.run_command(configure, "configuring OpenSSL build")?;
 
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
@@ -583,16 +591,16 @@ impl Build {
             let mut build =
                 cc::windows_registry::find(target, "nmake.exe").expect("failed to find nmake");
             build.arg("build_libs").current_dir(&inner_dir);
-            self.run_command(build, "building OpenSSL");
+            self.run_command(build, "building OpenSSL")?;
 
             let mut install =
                 cc::windows_registry::find(target, "nmake.exe").expect("failed to find nmake");
             install.arg("install_dev").current_dir(&inner_dir);
-            self.run_command(install, "installing OpenSSL");
+            self.run_command(install, "installing OpenSSL")?;
         } else {
             let mut depend = self.cmd_make();
             depend.arg("depend").current_dir(&inner_dir);
-            self.run_command(depend, "building OpenSSL dependencies");
+            self.run_command(depend, "building OpenSSL dependencies")?;
 
             let mut build = self.cmd_make();
             build.arg("build_libs").current_dir(&inner_dir);
@@ -608,11 +616,11 @@ impl Build {
                 build.env("CROSS_SDK", components[1]);
             }
 
-            self.run_command(build, "building OpenSSL");
+            self.run_command(build, "building OpenSSL")?;
 
             let mut install = self.cmd_make();
             install.arg("install_dev").current_dir(&inner_dir);
-            self.run_command(install, "installing OpenSSL");
+            self.run_command(install, "installing OpenSSL")?;
         }
 
         let libs = if target.contains("msvc") {
@@ -623,39 +631,43 @@ impl Build {
 
         fs::remove_dir_all(&inner_dir).unwrap();
 
-        Artifacts {
+        Ok(Artifacts {
             lib_dir: install_dir.join("lib"),
             bin_dir: install_dir.join("bin"),
             include_dir: install_dir.join("include"),
             libs: libs,
             target: target.to_string(),
-        }
+        })
     }
 
     #[track_caller]
-    fn run_command(&self, mut command: Command, desc: &str) {
+    fn run_command(&self, mut command: Command, desc: &str) -> Result<(), String> {
         println!("running {:?}", command);
         let status = command.status();
 
         let verbose_error = match status {
-            Ok(status) if status.success() => return,
-            Ok(status) => format!("'{exe}' reported failure with {status}", exe = command.get_program().to_string_lossy()),
+            Ok(status) if status.success() => return Ok(()),
+            Ok(status) => format!(
+                "'{exe}' reported failure with {status}",
+                exe = command.get_program().to_string_lossy()
+            ),
             Err(failed) => match failed.kind() {
-                std::io::ErrorKind::NotFound => format!("Command '{exe}' not found. Is {exe} installed?", exe = command.get_program().to_string_lossy()),
-                _ => format!("Could not run '{exe}', because {failed}", exe = command.get_program().to_string_lossy()),
-            }
+                std::io::ErrorKind::NotFound => format!(
+                    "Command '{exe}' not found. Is {exe} installed?",
+                    exe = command.get_program().to_string_lossy()
+                ),
+                _ => format!(
+                    "Could not run '{exe}', because {failed}",
+                    exe = command.get_program().to_string_lossy()
+                ),
+            },
         };
         println!("cargo:warning={desc}: {verbose_error}");
-        panic!(
-            "
-
-
-Error {desc}:
+        Err(format!(
+            "Error {desc}:
     {verbose_error}
-    Command failed: {command:?}
-
-
-");
+    Command failed: {command:?}"
+        ))
     }
 }
 
