@@ -60,45 +60,47 @@ impl Build {
         self
     }
 
-    fn cmd_make(&self) -> Command {
-        let host = &self.host.as_ref().expect("HOST dir not set")[..];
-        if host.contains("dragonfly")
-            || host.contains("freebsd")
-            || host.contains("openbsd")
-            || host.contains("solaris")
-            || host.contains("illumos")
-        {
-            Command::new("gmake")
-        } else {
-            Command::new("make")
-        }
+    fn cmd_make(&self) -> Result<Command, &'static str> {
+        let host = &self.host.as_ref().ok_or("HOST dir not set")?[..];
+        Ok(
+            if host.contains("dragonfly")
+                || host.contains("freebsd")
+                || host.contains("openbsd")
+                || host.contains("solaris")
+                || host.contains("illumos")
+            {
+                Command::new("gmake")
+            } else {
+                Command::new("make")
+            },
+        )
     }
 
     #[cfg(windows)]
-    #[track_caller]
     fn check_env_var(&self, var_name: &str) -> Option<bool> {
-        env::var_os(var_name).map(|s| {
+        env::var_os(var_name).and_then(|s| {
             if s == "1" {
                 // a message to stdout, let user know asm is force enabled
                 println!(
-                    "{}: nasm.exe is force enabled by the \
+                    "cargo:warning={}: nasm.exe is force enabled by the \
                     'OPENSSL_RUST_USE_NASM' env var.",
                     env!("CARGO_PKG_NAME")
                 );
-                true
+                Some(true)
             } else if s == "0" {
                 // a message to stdout, let user know asm is force disabled
                 println!(
-                    "{}: nasm.exe is force disabled by the \
+                    "cargo:warning={}: nasm.exe is force disabled by the \
                     'OPENSSL_RUST_USE_NASM' env var.",
                     env!("CARGO_PKG_NAME")
                 );
-                false
+                Some(false)
             } else {
-                panic!(
-                    "The environment variable {} is set to an unacceptable value: {:?}",
+                println!(
+                    "cargo:warning=The environment variable {} is set to an unacceptable value: {:?}",
                     var_name, s
                 );
+                None
             }
         })
     }
@@ -108,11 +110,11 @@ impl Build {
         self.check_env_var("OPENSSL_RUST_USE_NASM")
             .unwrap_or_else(|| {
                 // On Windows, use cmd `where` command to check if nasm is installed
-                let wherenasm = Command::new("cmd")
+                Command::new("cmd")
                     .args(&["/C", "where nasm"])
                     .output()
-                    .expect("Failed to execute `cmd`.");
-                wherenasm.status.success()
+                    .map(|w| w.status.success())
+                    .unwrap_or(false)
             })
     }
 
@@ -131,22 +133,22 @@ impl Build {
     }
 
     pub fn try_build(&mut self) -> Result<Artifacts, String> {
-        let target = &self.target.as_ref().expect("TARGET dir not set")[..];
-        let host = &self.host.as_ref().expect("HOST dir not set")[..];
-        let out_dir = self.out_dir.as_ref().expect("OUT_DIR not set");
+        let target = &self.target.as_ref().ok_or("TARGET dir not set")?[..];
+        let host = &self.host.as_ref().ok_or("HOST dir not set")?[..];
+        let out_dir = self.out_dir.as_ref().ok_or("OUT_DIR not set")?;
         let build_dir = out_dir.join("build");
         let install_dir = out_dir.join("install");
 
         if build_dir.exists() {
-            fs::remove_dir_all(&build_dir).unwrap();
+            fs::remove_dir_all(&build_dir).map_err(|e| format!("build_dir: {e}"))?;
         }
         if install_dir.exists() {
-            fs::remove_dir_all(&install_dir).unwrap();
+            fs::remove_dir_all(&install_dir).map_err(|e| format!("install_dir: {e}"))?;
         }
 
         let inner_dir = build_dir.join("src");
-        fs::create_dir_all(&inner_dir).unwrap();
-        cp_r(&source_dir(), &inner_dir);
+        fs::create_dir_all(&inner_dir).map_err(|e| format!("{}: {e}", inner_dir.display()))?;
+        cp_r(&source_dir(), &inner_dir)?;
 
         let perl_program =
             env::var("OPENSSL_SRC_PERL").unwrap_or(env::var("PERL").unwrap_or("perl".to_string()));
@@ -163,7 +165,10 @@ impl Build {
             // native and cross builds.
             configure.arg(&format!(
                 "--prefix={}",
-                install_dir.to_str().unwrap().replace("\\", "/")
+                install_dir
+                    .to_str()
+                    .ok_or("bad install_dir")?
+                    .replace("\\", "/")
             ));
         } else {
             configure.arg(&format!("--prefix={}", install_dir.display()));
@@ -179,7 +184,7 @@ impl Build {
             let openssl_dir = self
                 .openssl_dir
                 .as_ref()
-                .expect("path to the openssl directory must be set");
+                .ok_or("path to the openssl directory must be set")?;
             let mut dir_arg: OsString = "--openssldir=".into();
             dir_arg.push(openssl_dir);
             configure.arg(dir_arg);
@@ -400,7 +405,12 @@ impl Build {
             "aarch64-unknown-linux-ohos" => "linux-aarch64",
             "armv7-unknown-linux-ohos" => "linux-generic32",
             "x86_64-unknown-linux-ohos" => "linux-x86_64",
-            _ => panic!("don't know how to configure OpenSSL for {}", target),
+            _ => {
+                return Err(format!(
+                    "don't know how to configure OpenSSL for {}",
+                    target
+                ))
+            }
         };
 
         let mut ios_isysroot: std::option::Option<String> = None;
@@ -419,7 +429,7 @@ impl Build {
                 cc_env = compiler.path().to_path_buf().into_os_string();
             }
             configure.env("CC", cc_env);
-            let path = compiler.path().to_str().unwrap();
+            let path = compiler.path().to_str().ok_or("compiler path")?;
 
             // Both `cc::Build` and `./Configure` take into account
             // `CROSS_COMPILE` environment variable. So to avoid double
@@ -473,7 +483,7 @@ impl Build {
 
                     if is_isysroot {
                         is_isysroot = false;
-                        ios_isysroot = Some(arg.to_str().unwrap().to_string());
+                        ios_isysroot = Some(arg.to_str().ok_or("isysroot arg")?.to_string());
                         continue;
                     }
                 }
@@ -589,20 +599,20 @@ impl Build {
         // have that take a different path than the standard `make` below.
         if target.contains("msvc") {
             let mut build =
-                cc::windows_registry::find(target, "nmake.exe").expect("failed to find nmake");
+                cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             build.arg("build_libs").current_dir(&inner_dir);
             self.run_command(build, "building OpenSSL")?;
 
             let mut install =
-                cc::windows_registry::find(target, "nmake.exe").expect("failed to find nmake");
+                cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             install.arg("install_dev").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
         } else {
-            let mut depend = self.cmd_make();
+            let mut depend = self.cmd_make()?;
             depend.arg("depend").current_dir(&inner_dir);
             self.run_command(depend, "building OpenSSL dependencies")?;
 
-            let mut build = self.cmd_make();
+            let mut build = self.cmd_make()?;
             build.arg("build_libs").current_dir(&inner_dir);
             if !cfg!(windows) {
                 if let Some(s) = env::var_os("CARGO_MAKEFLAGS") {
@@ -618,7 +628,7 @@ impl Build {
 
             self.run_command(build, "building OpenSSL")?;
 
-            let mut install = self.cmd_make();
+            let mut install = self.cmd_make()?;
             install.arg("install_dev").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
         }
@@ -629,7 +639,7 @@ impl Build {
             vec!["ssl".to_string(), "crypto".to_string()]
         };
 
-        fs::remove_dir_all(&inner_dir).unwrap();
+        fs::remove_dir_all(&inner_dir).map_err(|e| format!("{}: {e}", inner_dir.display()))?;
 
         Ok(Artifacts {
             lib_dir: install_dir.join("lib"),
@@ -671,12 +681,16 @@ impl Build {
     }
 }
 
-#[track_caller]
-fn cp_r(src: &Path, dst: &Path) {
-    for f in fs::read_dir(src).unwrap() {
-        let f = f.unwrap();
+fn cp_r(src: &Path, dst: &Path) -> Result<(), String> {
+    for f in fs::read_dir(src).map_err(|e| format!("{}: {e}", src.display()))? {
+        let f = match f {
+            Ok(f) => f,
+            _ => continue,
+        };
         let path = f.path();
-        let name = path.file_name().unwrap();
+        let name = path
+            .file_name()
+            .ok_or_else(|| format!("bad dir {}", src.display()))?;
 
         // Skip git metadata as it's been known to cause issues (#26) and
         // otherwise shouldn't be required
@@ -685,27 +699,32 @@ fn cp_r(src: &Path, dst: &Path) {
         }
 
         let dst = dst.join(name);
-        let ty = f.file_type().unwrap();
+        let ty = f.file_type().map_err(|e| e.to_string())?;
         if ty.is_dir() {
-            fs::create_dir_all(&dst).unwrap();
-            cp_r(&path, &dst);
+            fs::create_dir_all(&dst).map_err(|e| e.to_string())?;
+            cp_r(&path, &dst)?;
         } else if ty.is_symlink() && path.iter().any(|p| p == "cloudflare-quiche") {
             // not needed to build
             continue;
         } else {
             let _ = fs::remove_file(&dst);
             if let Err(e) = fs::copy(&path, &dst) {
-                panic!("failed to copy {path:?} to {dst:?}: {e}");
+                return Err(format!(
+                    "failed to copy '{}' to '{}': {e}",
+                    path.display(),
+                    dst.display()
+                ));
             }
         }
     }
+    Ok(())
 }
 
 fn sanitize_sh(path: &Path) -> String {
     if !cfg!(windows) {
-        return path.to_str().unwrap().to_string();
+        return path.to_string_lossy().into_owned();
     }
-    let path = path.to_str().unwrap().replace("\\", "/");
+    let path = path.to_string_lossy().replace("\\", "/");
     return change_drive(&path).unwrap_or(path);
 
     fn change_drive(s: &str) -> Option<String> {
