@@ -124,11 +124,15 @@ impl Build {
         false
     }
 
-    #[track_caller]
+    /// Exits the process on failure. Use `try_build` to handle the error.
     pub fn build(&mut self) -> Artifacts {
         match self.try_build() {
             Ok(a) => a,
-            Err(e) => panic!("\n\n\n{e}\n\n\n"),
+            Err(e) => {
+                println!("cargo:warning=openssl-src: failed to build OpenSSL from source");
+                eprintln!("\n\n\n{e}\n\n\n");
+                std::process::exit(1);
+            }
         }
     }
 
