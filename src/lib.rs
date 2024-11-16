@@ -197,6 +197,7 @@ impl Build {
         configure
             // No shared objects, we just want static libraries
             .arg("no-shared")
+            .arg("no-module")
             // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
             .arg("no-ssl3")
             // No need to build tests, we won't run them anyway
