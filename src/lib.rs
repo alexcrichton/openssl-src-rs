@@ -452,11 +452,16 @@ impl Build {
                     ar.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
                 );
             }
-            let ranlib = cc.get_ranlib();
-            // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
-            let mut args = vec![ranlib.get_program()];
-            args.extend(ranlib.get_args());
-            configure.env("RANLIB", args.join(OsStr::new(" ")));
+
+            // We don't have GCC in newer NDK versions.
+            if !target.contains("android") || (target.contains("android") && path.contains("-gcc"))
+            {
+                let ranlib = cc.get_ranlib();
+                // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
+                let mut args = vec![ranlib.get_program()];
+                args.extend(ranlib.get_args());
+                configure.env("RANLIB", args.join(OsStr::new(" ")));
+            }
 
             // Make sure we pass extra flags like `-ffunction-sections` and
             // other things like ARM codegen flags.
