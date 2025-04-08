@@ -23,7 +23,7 @@ exclude = [
   'openssl/python-ecdsa/*',
   'openssl/oqs-provider/*',
   'openssl/cloudflare-quiche/*',
-  'openssl/tlslite-ng/*',
+  'openssl/pkcs11-provider/*',
 # The current upload size limit for *.crate files is 10MB. Therefore, exclude
 # some unused documentation to meet this constraint.
   'openssl/doc/man{3,5,7}',
