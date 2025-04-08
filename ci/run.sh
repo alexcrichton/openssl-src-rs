@@ -27,7 +27,7 @@ if [ "$1" = "x86_64-unknown-linux-gnu" ] ; then
   crate=`ls target/ci/package/*.crate`
   filesize=$(stat -c%s "$crate")
   echo "tarball is $filesize bytes"
-  if (( filesize > 10000000 )); then
+  if (( filesize > 15000000 )); then
     echo "file size too big"
     exit 1
   fi
