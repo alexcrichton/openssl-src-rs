@@ -198,8 +198,6 @@ impl Build {
             // No shared objects, we just want static libraries
             .arg("no-shared")
             .arg("no-module")
-            // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
-            .arg("no-ssl3")
             // No need to build tests, we won't run them anyway
             .arg("no-tests")
             // Nothing related to zlib please
@@ -220,6 +218,13 @@ impl Build {
 
         if cfg!(not(feature = "legacy")) {
             configure.arg("no-legacy");
+        }
+
+        if cfg!(feature = "ssl3") {
+            configure.arg("enable-ssl3").arg("enable-ssl3-method");
+        } else {
+            // Should be off by default on OpenSSL 1.1.0, but let's be extra sure
+            configure.arg("no-ssl3");
         }
 
         if cfg!(feature = "weak-crypto") {

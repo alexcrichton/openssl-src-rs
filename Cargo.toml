@@ -37,6 +37,8 @@ legacy = []
 # Enables compilation of some older algorithms: md2 (hash), rc5 (block cypher) and enabled use of
 # some weaker algorithms in SSL connections. These are generally not recommended for use.
 weak-crypto = []
+# Enables compilation of SSLv3, which is disabled by default.
+ssl3 = []
 # Enables compilation of the Camellia symmetric key block cypher. Since hardware acceleration for
 # it is not available on most systems, this is not as used as AES.
 camellia = []
