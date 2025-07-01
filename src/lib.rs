@@ -773,6 +773,7 @@ impl Artifacts {
         if self.target.contains("windows") {
             println!("cargo:rustc-link-lib=user32");
             println!("cargo:rustc-link-lib=crypt32");
+            println!("cargo:rustc-link-lib=advapi32");
         } else if self.target == "wasm32-wasi" {
             println!("cargo:rustc-link-lib=wasi-emulated-signal");
             println!("cargo:rustc-link-lib=wasi-emulated-process-clocks");
