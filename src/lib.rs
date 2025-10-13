@@ -383,6 +383,7 @@ impl Build {
             "riscv64gc-unknown-netbsd" => "BSD-generic64",
             "s390x-unknown-linux-gnu" => "linux64-s390x",
             "sparc64-unknown-netbsd" => "BSD-generic64",
+            "sparc64-unknown-linux-gnu" => "linux64-sparcv9",
             "s390x-unknown-linux-musl" => "linux64-s390x",
             "s390x-alpine-linux-musl" => "linux64-s390x",
             "sparcv9-sun-solaris" => "solaris64-sparcv9-gcc",
