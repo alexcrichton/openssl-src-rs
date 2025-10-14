@@ -27,6 +27,13 @@ exclude = [
 # The current upload size limit for *.crate files is 10MB. Therefore, exclude
 # some unused documentation to meet this constraint.
   'openssl/doc/man{3,5,7}',
+  '.github',
+  'ci',
+  '.gitignore',
+  '.gitmodules',
+  'openssl/.ctags.d/',
+  'openssl/.git-blame-ignore-revs',
+  'openssl/.gitattributes',
 ]
 
 [features]
