@@ -41,6 +41,7 @@ exclude = [
   'openssl/**/*.sh',
   'openssl/**/*.md',
 
+  'openssl/demos',
   'openssl/external/perl/Text-Template-1.56/Changes',
   'openssl/external/perl/Text-Template-1.56/INSTALL',
   'openssl/external/perl/Text-Template-1.56/MANIFEST',
