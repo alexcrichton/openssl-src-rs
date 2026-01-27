@@ -545,6 +545,13 @@ impl Build {
                 // executable to run.
                 let windres = format!("{}-windres", &path[..path.len() - 4]);
                 configure.env("WINDRES", &windres);
+
+                // Cross-compiling to MinGW apparently has different enough
+                // headers that QUIC no longer compiles. Defer fixing this to
+                // some future day...
+                if !cfg!(windows) {
+                    configure.arg("no-quic");
+                }
             }
 
             if target.contains("emscripten") {
