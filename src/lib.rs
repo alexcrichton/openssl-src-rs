@@ -414,6 +414,8 @@ impl Build {
             "aarch64-apple-ios" => "ios64-cross",
             "x86_64-apple-ios" => "iossimulator-xcrun",
             "aarch64-apple-ios-sim" => "iossimulator-xcrun",
+            "aarch64-apple-ios-macabi" => "darwin64-arm64-cc",
+            "x86_64-apple-ios-macabi" => "darwin64-x86_64-cc",
             "aarch64-unknown-linux-ohos" => "linux-aarch64",
             "armv7-unknown-linux-ohos" => "linux-generic32",
             "x86_64-unknown-linux-ohos" => "linux-x86_64",
