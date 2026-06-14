@@ -369,6 +369,7 @@ impl Build {
             "powerpc-unknown-netbsd" => "BSD-generic32",
             "powerpc64-unknown-freebsd" => "BSD-ppc64",
             "powerpc64-unknown-linux-gnu" => "linux-ppc64",
+            "powerpc64-unknown-linux-gnuelfv2" => "linux-ppc64",
             "powerpc64-unknown-linux-musl" => "linux-ppc64",
             "powerpc64-chimera-linux-musl" => "linux-ppc64",
             "powerpc64le-unknown-freebsd" => "BSD-ppc64le",
