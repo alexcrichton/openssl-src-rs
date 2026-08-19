@@ -378,6 +378,7 @@ impl Build {
             "powerpc64le-alpine-linux-musl" => "linux-ppc64le",
             "powerpc64le-chimera-linux-musl" => "linux-ppc64le",
             "riscv64gc-unknown-freebsd" => "BSD-riscv64",
+            "riscv64a23-unknown-linux-gnu" => "linux64-riscv64",
             "riscv64gc-unknown-linux-gnu" => "linux64-riscv64",
             "riscv64gc-unknown-linux-musl" => "linux64-riscv64",
             "riscv64-alpine-linux-musl" => "linux64-riscv64",
