@@ -143,6 +143,8 @@ impl Build {
         let build_dir = out_dir.join("build");
         let install_dir = out_dir.join("install");
 
+        println!("\nopenssl-src::Build\ntarget = {}\nhost = {}\nout_dir = {}\nbuild_dir = {}\ninstall_dir = {}\nis cfg Windows = {}\n", target, host, out_dir.display(), build_dir.display(), install_dir.display(), cfg!(windows));
+
         if build_dir.exists() {
             fs::remove_dir_all(&build_dir).map_err(|e| format!("build_dir: {e}"))?;
         }
@@ -160,7 +162,9 @@ impl Build {
         configure.arg("./Configure");
 
         // Change the install directory to happen inside of the build directory.
-        if host.contains("pc-windows-gnu") {
+        // Sanitize also if env var is set
+        let sanitize = env::var("OPENSSL_SRC_PREFIX_SANITIZE_SH").unwrap_or("false".to_string());
+        if host.contains("pc-windows-gnu") || sanitize.contains("true") {
             configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
         } else if host.contains("pc-windows-msvc") || host.contains("win7-windows-msvc") {
             // On Windows, the prefix argument does not support \ path seperators
