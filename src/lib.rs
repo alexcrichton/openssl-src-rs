@@ -305,6 +305,8 @@ impl Build {
             "aarch64-unknown-openbsd" => "BSD-generic64",
             "aarch64-unknown-linux-gnu" => "linux-aarch64",
             "aarch64-unknown-linux-musl" => "linux-aarch64",
+            "aarch64-oe-linux-gnu" => "linux-aarch64",
+            "aarch64-oe-linux-musl" => "linux-aarch64",
             "aarch64-alpine-linux-musl" => "linux-aarch64",
             "aarch64-chimera-linux-musl" => "linux-aarch64",
             "aarch64-unknown-netbsd" => "BSD-generic64",
