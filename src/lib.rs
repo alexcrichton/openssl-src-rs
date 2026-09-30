@@ -659,11 +659,18 @@ impl Build {
             self.run_command(install, "installing OpenSSL")?;
         } else {
             let mut depend = self.cmd_make()?;
-            depend.arg("depend").current_dir(&inner_dir);
+            depend
+                .arg("depend")
+                .arg("build_generated")
+                .current_dir(&inner_dir);
             self.run_command(depend, "building OpenSSL dependencies")?;
 
             let mut build = self.cmd_make()?;
             build.arg("build_libs").current_dir(&inner_dir);
+            // The default MODULESDIR is under the prefix, which is the build directory.
+            if !target.contains("windows") {
+                build.arg("MODULESDIR=/usr/local/lib/ossl-modules");
+            }
             if !cfg!(windows) {
                 if let Some(s) = env::var_os("CARGO_MAKEFLAGS") {
                     build.env("MAKEFLAGS", s);
