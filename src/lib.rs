@@ -432,6 +432,7 @@ impl Build {
         };
 
         let mut ios_isysroot: std::option::Option<String> = None;
+        let mut prefix_map = None;
 
         configure.arg(os);
 
@@ -448,6 +449,19 @@ impl Build {
             }
             configure.env("CC", cc_env);
             let path = compiler.path().to_str().ok_or("compiler path")?;
+
+            // Debug info records the build directory; remap it if the compiler can.
+            let dir = fs::canonicalize(&inner_dir).ok();
+            if let Some(dir) = dir.as_deref().and_then(Path::to_str) {
+                let flag = format!("-ffile-prefix-map={dir}=.");
+                if dir
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "/._+-".contains(c))
+                    && cc.is_flag_supported(&flag).unwrap_or(false)
+                {
+                    prefix_map = Some(flag);
+                }
+            }
 
             // Both `cc::Build` and `./Configure` take into account
             // `CROSS_COMPILE` environment variable. So to avoid double
@@ -674,6 +688,14 @@ impl Build {
             if !cfg!(windows) {
                 if let Some(s) = env::var_os("CARGO_MAKEFLAGS") {
                     build.env("MAKEFLAGS", s);
+                }
+            }
+
+            // Not via Configure, whose flags are embedded in libcrypto.
+            if let Some(ref flag) = prefix_map {
+                let makefile = fs::read_to_string(inner_dir.join("Makefile")).unwrap_or_default();
+                if let Some(cppflags) = makefile.lines().find_map(|l| l.strip_prefix("CPPFLAGS=")) {
+                    build.arg(format!("CPPFLAGS={cppflags} {flag}"));
                 }
             }
 
