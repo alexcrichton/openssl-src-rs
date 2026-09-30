@@ -640,12 +640,17 @@ impl Build {
         configure.current_dir(&inner_dir);
         self.run_command(configure, "configuring OpenSSL build")?;
 
+        // Without SOURCE_DATE_EPOCH OpenSSL embeds the current time in the library.
+        println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+        let source_date_epoch = env::var_os("SOURCE_DATE_EPOCH").unwrap_or_else(|| "0".into());
+
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
         if target.contains("msvc") {
             let mut build =
                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             build.arg("build_libs").current_dir(&inner_dir);
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
             self.run_command(build, "building OpenSSL")?;
 
             let mut install =
@@ -670,6 +675,8 @@ impl Build {
                 build.env("CROSS_TOP", components[0]);
                 build.env("CROSS_SDK", components[1]);
             }
+
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
 
             self.run_command(build, "building OpenSSL")?;
 
