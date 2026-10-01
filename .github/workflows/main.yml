@@ -69,21 +69,21 @@ jobs:
           #   rust: stable
           #   os: ubuntu-latest
           - target: i686-pc-windows-msvc
-            rust: stable-i686-msvc
+            rust: stable
             os: windows-2022
           - target: i686-pc-windows-msvc
-            rust: stable-i686-msvc
+            rust: stable
             os: windows-2022
             crt_static: yes
           - target: x86_64-pc-windows-msvc
-            rust: stable-x86_64-msvc
+            rust: stable
             os: windows-latest
           - target: x86_64-pc-windows-msvc
-            rust: stable-x86_64-msvc
+            rust: stable
             os: windows-latest
             crt_static: yes
           - target: x86_64-pc-windows-msvc
-            rust: stable-x86_64-msvc
+            rust: stable
             os: windows-latest
             nasm_exe: installed
 
