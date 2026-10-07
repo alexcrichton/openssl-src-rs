@@ -276,12 +276,22 @@ impl Build {
             configure.arg("no-async");
         }
 
-        // On Android it looks like not passing no-stdio may cause a build
-        // failure (#13), but most other platforms need it for things like
-        // loading system certificates so only disable it on Android.
-        if target.contains("android") {
-            configure.arg("no-stdio");
-        }
+        // NOTE(mdeditor): upstream passes `no-stdio` on Android here, citing
+        // issue #13. That issue was opened 2018-09-12 for "android-gcc: fatal
+        // error: no input files" -- a GCC-era NDK failure. The NDK has been
+        // Clang-only since r18, and OpenSSL builds clean for Android on NDK
+        // 27.3.13750724 without it (verified 2026-08-12, arm64-v8a).
+        //
+        // Keeping it is not harmless. `no-stdio` removes `BIO_new_file`, so no
+        // file-backed CA store can be loaded at all -- not a bundled
+        // cacert.pem, not Android's own /system/etc/security/cacerts, and not
+        // SSL_CERT_FILE. Every TLS verification on Android therefore fails,
+        // which is what upstream's own comment concedes when it says "most
+        // other platforms need it for things like loading system
+        // certificates". Android needs it for exactly the same reason.
+        //
+        // Removed deliberately. See gavinlnz/MDEditor
+        // mde-android-openssl-cert-verify for the full evidence.
 
         if target.contains("msvc") {
             // On MSVC we need nasm.exe to compile the assembly files.
