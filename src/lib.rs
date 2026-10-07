@@ -432,6 +432,7 @@ impl Build {
         };
 
         let mut ios_isysroot: std::option::Option<String> = None;
+        let mut prefix_map = None;
 
         configure.arg(os);
 
@@ -448,6 +449,19 @@ impl Build {
             }
             configure.env("CC", cc_env);
             let path = compiler.path().to_str().ok_or("compiler path")?;
+
+            // Debug info records the build directory; remap it if the compiler can.
+            let dir = fs::canonicalize(&inner_dir).ok();
+            if let Some(dir) = dir.as_deref().and_then(Path::to_str) {
+                let flag = format!("-ffile-prefix-map={dir}=.");
+                if dir
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "/._+-".contains(c))
+                    && cc.is_flag_supported(&flag).unwrap_or(false)
+                {
+                    prefix_map = Some(flag);
+                }
+            }
 
             // Both `cc::Build` and `./Configure` take into account
             // `CROSS_COMPILE` environment variable. So to avoid double
@@ -640,12 +654,17 @@ impl Build {
         configure.current_dir(&inner_dir);
         self.run_command(configure, "configuring OpenSSL build")?;
 
+        // Without SOURCE_DATE_EPOCH OpenSSL embeds the current time in the library.
+        println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+        let source_date_epoch = env::var_os("SOURCE_DATE_EPOCH").unwrap_or_else(|| "0".into());
+
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
         if target.contains("msvc") {
             let mut build =
                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             build.arg("build_libs").current_dir(&inner_dir);
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
             self.run_command(build, "building OpenSSL")?;
 
             let mut install =
@@ -654,14 +673,29 @@ impl Build {
             self.run_command(install, "installing OpenSSL")?;
         } else {
             let mut depend = self.cmd_make()?;
-            depend.arg("depend").current_dir(&inner_dir);
+            depend
+                .arg("depend")
+                .arg("build_generated")
+                .current_dir(&inner_dir);
             self.run_command(depend, "building OpenSSL dependencies")?;
 
             let mut build = self.cmd_make()?;
             build.arg("build_libs").current_dir(&inner_dir);
+            // The default MODULESDIR is under the prefix, which is the build directory.
+            if !target.contains("windows") {
+                build.arg("MODULESDIR=/usr/local/lib/ossl-modules");
+            }
             if !cfg!(windows) {
                 if let Some(s) = env::var_os("CARGO_MAKEFLAGS") {
                     build.env("MAKEFLAGS", s);
+                }
+            }
+
+            // Not via Configure, whose flags are embedded in libcrypto.
+            if let Some(ref flag) = prefix_map {
+                let makefile = fs::read_to_string(inner_dir.join("Makefile")).unwrap_or_default();
+                if let Some(cppflags) = makefile.lines().find_map(|l| l.strip_prefix("CPPFLAGS=")) {
+                    build.arg(format!("CPPFLAGS={cppflags} {flag}"));
                 }
             }
 
@@ -670,6 +704,8 @@ impl Build {
                 build.env("CROSS_TOP", components[0]);
                 build.env("CROSS_SDK", components[1]);
             }
+
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
 
             self.run_command(build, "building OpenSSL")?;
 
