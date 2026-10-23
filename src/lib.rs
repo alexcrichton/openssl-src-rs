@@ -432,6 +432,7 @@ impl Build {
         };
 
         let mut ios_isysroot: std::option::Option<String> = None;
+        let mut prefix_map = None;
 
         configure.arg(os);
 
@@ -448,6 +449,19 @@ impl Build {
             }
             configure.env("CC", cc_env);
             let path = compiler.path().to_str().ok_or("compiler path")?;
+
+            // Debug info records the build directory; remap it if the compiler can.
+            let dir = fs::canonicalize(&inner_dir).ok();
+            if let Some(dir) = dir.as_deref().and_then(Path::to_str) {
+                let flag = format!("-ffile-prefix-map={dir}=.");
+                if dir
+                    .chars()
+                    .all(|c| c.is_ascii_alphanumeric() || "/._+-".contains(c))
+                    && cc.is_flag_supported(&flag).unwrap_or(false)
+                {
+                    prefix_map = Some(flag);
+                }
+            }
 
             // Both `cc::Build` and `./Configure` take into account
             // `CROSS_COMPILE` environment variable. So to avoid double
@@ -640,12 +654,17 @@ impl Build {
         configure.current_dir(&inner_dir);
         self.run_command(configure, "configuring OpenSSL build")?;
 
+        // Without SOURCE_DATE_EPOCH OpenSSL embeds the current time in the library.
+        println!("cargo:rerun-if-env-changed=SOURCE_DATE_EPOCH");
+        let source_date_epoch = env::var_os("SOURCE_DATE_EPOCH").unwrap_or_else(|| "0".into());
+
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
         if target.contains("msvc") {
             let mut build =
                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             build.arg("build_libs").current_dir(&inner_dir);
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
             self.run_command(build, "building OpenSSL")?;
 
             let mut install =
@@ -653,6 +672,23 @@ impl Build {
             install.arg("install_dev").current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
         } else {
+            // GNU make reads GNUmakefile in preference to Makefile, including in
+            // the recursive `$(MAKE)` calls that `build_libs` makes.
+            let mut gnumakefile = String::from("include Makefile\n");
+            // Not via Configure, whose flags are embedded in libcrypto. A
+            // make-time CPPFLAGS is not, because CPPFLAGS_Q is fixed by Configure.
+            if let Some(ref flag) = prefix_map {
+                gnumakefile.push_str(&format!("CPPFLAGS += {flag}\n"));
+            }
+            // The default MODULESDIR is under the prefix, which is the build
+            // directory. Scoped to objects so installdata.pm, and with it the
+            // pkg-config and CMake files, keeps the install dir.
+            if !target.contains("windows") {
+                gnumakefile.push_str("%.o: MODULESDIR = /usr/local/lib/ossl-modules\n");
+            }
+            let path = inner_dir.join("GNUmakefile");
+            fs::write(&path, gnumakefile).map_err(|e| format!("{}: {e}", path.display()))?;
+
             let mut depend = self.cmd_make()?;
             depend.arg("depend").current_dir(&inner_dir);
             self.run_command(depend, "building OpenSSL dependencies")?;
@@ -671,10 +707,20 @@ impl Build {
                 build.env("CROSS_SDK", components[1]);
             }
 
+            build.env("SOURCE_DATE_EPOCH", &source_date_epoch);
+            // Apple's ar and ranlib record each member's mtime unless this is set.
+            if target.contains("apple") {
+                build.env("ZERO_AR_DATE", "1");
+            }
+
             self.run_command(build, "building OpenSSL")?;
 
             let mut install = self.cmd_make()?;
             install.arg("install_dev").current_dir(&inner_dir);
+            // install_dev runs ranlib again on the installed archives.
+            if target.contains("apple") {
+                install.env("ZERO_AR_DATE", "1");
+            }
             self.run_command(install, "installing OpenSSL")?;
         }
 
