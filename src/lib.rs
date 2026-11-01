@@ -159,24 +159,29 @@ impl Build {
         let mut configure = Command::new(perl_program);
         configure.arg("./Configure");
 
-        // Change the install directory to happen inside of the build directory.
-        if host.contains("pc-windows-gnu") {
-            configure.arg(&format!("--prefix={}", sanitize_sh(&install_dir)));
-        } else if host.contains("pc-windows-msvc") || host.contains("win7-windows-msvc") {
-            // On Windows, the prefix argument does not support \ path seperators
-            // when cross compiling.
-            // Always use / as a path seperator instead of \, since that works for both
-            // native and cross builds.
-            configure.arg(&format!(
-                "--prefix={}",
-                install_dir
-                    .to_str()
-                    .ok_or("bad install_dir")?
-                    .replace("\\", "/")
-            ));
+        // OpenSSL compiles directories derived from the prefix (such as
+        // MODULESDIR and, before 4.0, ENGINESDIR) into libcrypto. Configure
+        // a fixed prefix so those don't point into the build directory, and
+        // stage the install inside the build directory with `DESTDIR` instead.
+        let prefix = if target.contains("msvc") {
+            // OpenSSL's default prefix for 64-bit Windows.
+            "C:/Program Files/OpenSSL"
         } else {
-            configure.arg(&format!("--prefix={}", install_dir.display()));
-        }
+            "/usr/local"
+        };
+        configure.arg(&format!("--prefix={prefix}"));
+        let destdir = if host.contains("pc-windows-gnu") {
+            sanitize_sh(&install_dir)
+        } else {
+            install_dir.to_str().ok_or("bad install_dir")?.to_string()
+        };
+        // `make install` appends the prefix to `DESTDIR`. nmake drops the
+        // drive letter, which is also what this does.
+        let staged_dir = prefix
+            .trim_start_matches("C:")
+            .split('/')
+            .filter(|c| !c.is_empty())
+            .fold(install_dir.clone(), |dir, c| dir.join(c));
 
         // Specify that openssl directory where things are loaded at runtime is
         // not inside our build directory. Instead this should be located in the
@@ -650,7 +655,10 @@ impl Build {
 
             let mut install =
                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
-            install.arg("install_dev").current_dir(&inner_dir);
+            install
+                .arg("install_dev")
+                .arg(format!("DESTDIR={destdir}"))
+                .current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
         } else {
             let mut depend = self.cmd_make()?;
@@ -674,7 +682,10 @@ impl Build {
             self.run_command(build, "building OpenSSL")?;
 
             let mut install = self.cmd_make()?;
-            install.arg("install_dev").current_dir(&inner_dir);
+            install
+                .arg("install_dev")
+                .arg(format!("DESTDIR={destdir}"))
+                .current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
         }
 
@@ -687,9 +698,9 @@ impl Build {
         fs::remove_dir_all(&inner_dir).map_err(|e| format!("{}: {e}", inner_dir.display()))?;
 
         Ok(Artifacts {
-            lib_dir: install_dir.join("lib"),
-            bin_dir: install_dir.join("bin"),
-            include_dir: install_dir.join("include"),
+            lib_dir: staged_dir.join("lib"),
+            bin_dir: staged_dir.join("bin"),
+            include_dir: staged_dir.join("include"),
             libs: libs,
             target: target.to_string(),
         })
