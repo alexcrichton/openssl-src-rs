@@ -6,6 +6,31 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// Custom OpenSSL `Configure` targets used when cross compiling to
+/// `*-windows-msvc` from a non-windows host (e.g. via `cargo xwin`).
+///
+/// Each one inherits the matching mingw target, but uses the `sys_id` of the
+/// matching `VC-*` target (`VC-WIN64-ARM` has none).
+const XWIN_TARGETS_CONF: &str = r#"
+my %targets = (
+    "xwin-x86_64" => {
+        inherit_from => [ "mingw64" ],
+        sys_id       => "WIN64A",
+        lib_cflags => add("/Zl"),
+    },
+    "xwin-i686" => {
+        inherit_from => [ "mingw" ],
+        sys_id       => "WIN32",
+        lib_cflags => add("/Zl"),
+    },
+    "xwin-aarch64" => {
+        inherit_from => [ "mingwarm64" ],
+        sys_id       => "",
+        lib_cflags => add("/Zl"),
+    },
+);
+"#;
+
 pub fn source_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("openssl")
 }
@@ -315,7 +340,7 @@ impl Build {
             "aarch64-chimera-linux-musl" => "linux-aarch64",
             "aarch64-unknown-netbsd" => "BSD-generic64",
             "aarch64_be-unknown-netbsd" => "BSD-generic64",
-            "aarch64-pc-windows-msvc" if cross_msvc => "mingwarm64",
+            "aarch64-pc-windows-msvc" if cross_msvc => "xwin-aarch64",
             "aarch64-pc-windows-msvc" => "VC-WIN64-ARM",
             "aarch64-uwp-windows-msvc" => "VC-WIN64-ARM-UWP",
             "arm-linux-androideabi" => "linux-armv4",
@@ -345,9 +370,9 @@ impl Build {
             "i686-apple-darwin" => "darwin-i386-cc",
             "i686-linux-android" => "linux-elf",
             "i686-pc-windows-gnu" => "mingw",
-            "i686-pc-windows-msvc" if cross_msvc => "mingw64",
+            "i686-pc-windows-msvc" if cross_msvc => "xwin-i686",
             "i686-pc-windows-msvc" => "VC-WIN32",
-            "i686-win7-windows-msvc" if cross_msvc => "mingw64",
+            "i686-win7-windows-msvc" if cross_msvc => "xwin-i686",
             "i686-win7-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
             "i686-unknown-haiku" => "haiku-x86",
@@ -400,9 +425,9 @@ impl Build {
             "x86_64-linux" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "x86_64-pc-windows-gnullvm" => "mingw64",
-            "x86_64-pc-windows-msvc" if cross_msvc => "mingw64",
+            "x86_64-pc-windows-msvc" if cross_msvc => "xwin-x86_64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
-            "x86_64-win7-windows-msvc" if cross_msvc => "mingw64",
+            "x86_64-win7-windows-msvc" if cross_msvc => "xwin-x86_64",
             "x86_64-win7-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
             "x86_64-unknown-dragonfly" => "BSD-x86_64",
@@ -438,6 +463,28 @@ impl Build {
         };
 
         let mut ios_isysroot: std::option::Option<String> = None;
+
+        if cross_msvc {
+            // The `xwin-*` targets reuse OpenSSL's mingw build recipes (unix
+            // style Makefile, works with a linux perl), but are compiled with
+            // clang-cl against the MSVC CRT. Override `sys_id` so that the
+            // installed `openssl/configuration.h` advertises the same
+            // `OPENSSL_SYS_*` define as the corresponding `VC-*` target
+            // instead of `OPENSSL_SYS_MINGW*`.
+            //
+            // OpenSSL refuses custom targets that shadow builtin ones, so
+            // these need their own names.
+            let config_file = out_dir.join("xwin-targets.conf");
+            fs::write(&config_file, XWIN_TARGETS_CONF).map_err(|e| {
+                format!(
+                    "Failed to write custom windows cross compilation configuration {}: {e}",
+                    config_file.display()
+                )
+            })?;
+            let mut arg = OsString::from("--config=");
+            arg.push(&config_file);
+            configure.arg(arg);
+        }
 
         configure.arg(os);
 
