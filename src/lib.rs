@@ -6,6 +6,31 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+/// Custom OpenSSL `Configure` targets used when cross compiling to
+/// `*-windows-msvc` from a non-windows host (e.g. via `cargo xwin`).
+///
+/// Each one inherits the matching mingw target, but uses the `sys_id` of the
+/// matching `VC-*` target (`VC-WIN64-ARM` has none).
+const XWIN_TARGETS_CONF: &str = r#"
+my %targets = (
+    "xwin-x86_64" => {
+        inherit_from => [ "mingw64" ],
+        sys_id       => "WIN64A",
+        lib_cflags => add("/Zl"),
+    },
+    "xwin-i686" => {
+        inherit_from => [ "mingw" ],
+        sys_id       => "WIN32",
+        lib_cflags => add("/Zl"),
+    },
+    "xwin-aarch64" => {
+        inherit_from => [ "mingwarm64" ],
+        sys_id       => "",
+        lib_cflags => add("/Zl"),
+    },
+);
+"#;
+
 pub fn source_dir() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("openssl")
 }
@@ -140,6 +165,7 @@ impl Build {
         let target = &self.target.as_ref().ok_or("TARGET dir not set")?[..];
         let host = &self.host.as_ref().ok_or("HOST dir not set")?[..];
         let out_dir = self.out_dir.as_ref().ok_or("OUT_DIR not set")?;
+        let cross_msvc = target.contains("msvc") && !host.contains("windows");
         let build_dir = out_dir.join("build");
         let install_dir = out_dir.join("install");
 
@@ -187,7 +213,7 @@ impl Build {
         // not inside our build directory. Instead this should be located in the
         // default locations of the OpenSSL build scripts, or as specified by whatever
         // configured this builder.
-        if target.contains("windows") {
+        if target.contains("windows") && !cross_msvc {
             configure.arg("--openssldir=SYS$MANAGER:[OPENSSL]");
         } else {
             let openssl_dir = self
@@ -319,6 +345,7 @@ impl Build {
             "aarch64-chimera-linux-musl" => "linux-aarch64",
             "aarch64-unknown-netbsd" => "BSD-generic64",
             "aarch64_be-unknown-netbsd" => "BSD-generic64",
+            "aarch64-pc-windows-msvc" if cross_msvc => "xwin-aarch64",
             "aarch64-pc-windows-msvc" => "VC-WIN64-ARM",
             "aarch64-uwp-windows-msvc" => "VC-WIN64-ARM-UWP",
             "arm-linux-androideabi" => "linux-armv4",
@@ -348,7 +375,9 @@ impl Build {
             "i686-apple-darwin" => "darwin-i386-cc",
             "i686-linux-android" => "linux-elf",
             "i686-pc-windows-gnu" => "mingw",
+            "i686-pc-windows-msvc" if cross_msvc => "xwin-i686",
             "i686-pc-windows-msvc" => "VC-WIN32",
+            "i686-win7-windows-msvc" if cross_msvc => "xwin-i686",
             "i686-win7-windows-msvc" => "VC-WIN32",
             "i686-unknown-freebsd" => "BSD-x86-elf",
             "i686-unknown-haiku" => "haiku-x86",
@@ -401,7 +430,9 @@ impl Build {
             "x86_64-linux" => "linux-x86_64",
             "x86_64-pc-windows-gnu" => "mingw64",
             "x86_64-pc-windows-gnullvm" => "mingw64",
+            "x86_64-pc-windows-msvc" if cross_msvc => "xwin-x86_64",
             "x86_64-pc-windows-msvc" => "VC-WIN64A",
+            "x86_64-win7-windows-msvc" if cross_msvc => "xwin-x86_64",
             "x86_64-win7-windows-msvc" => "VC-WIN64A",
             "x86_64-unknown-freebsd" => "BSD-x86_64",
             "x86_64-unknown-dragonfly" => "BSD-x86_64",
@@ -438,12 +469,36 @@ impl Build {
 
         let mut ios_isysroot: std::option::Option<String> = None;
 
+        if cross_msvc {
+            // The `xwin-*` targets reuse OpenSSL's mingw build recipes (unix
+            // style Makefile, works with a linux perl), but are compiled with
+            // clang-cl against the MSVC CRT. Override `sys_id` so that the
+            // installed `openssl/configuration.h` advertises the same
+            // `OPENSSL_SYS_*` define as the corresponding `VC-*` target
+            // instead of `OPENSSL_SYS_MINGW*`.
+            //
+            // OpenSSL refuses custom targets that shadow builtin ones, so
+            // these need their own names.
+            let config_file = out_dir.join("xwin-targets.conf");
+            fs::write(&config_file, XWIN_TARGETS_CONF).map_err(|e| {
+                format!(
+                    "Failed to write custom windows cross compilation configuration {}: {e}",
+                    config_file.display()
+                )
+            })?;
+            let mut arg = OsString::from("--config=");
+            arg.push(&config_file);
+            configure.arg(arg);
+        }
+
         configure.arg(os);
 
         // If we're not on MSVC we configure cross compilers and cross tools and
         // whatnot. Note that this doesn't happen on MSVC b/c things are pretty
         // different there and this isn't needed most of the time anyway.
-        if !target.contains("msvc") {
+        // We take the same code path for cross compiling via clang-cl
+        // although the target contains msvc there
+        if !target.contains("msvc") || cross_msvc {
             let mut cc = cc::Build::new();
             cc.target(target).host(host).warnings(false).opt_level(2);
             let compiler = cc.get_compiler();
@@ -460,21 +515,65 @@ impl Build {
             configure.env_remove("CROSS_COMPILE");
 
             let ar = cc.get_archiver();
-            configure.env("AR", ar.get_program());
-            if ar.get_args().count() != 0 {
-                // On some platforms (like emscripten on windows), the ar to use may not be a
-                // single binary, but instead a multi-argument command like `cmd /c emar.bar`.
-                // We can't convey that through `AR` alone, and so also need to set ARFLAGS.
-                configure.env(
-                    "ARFLAGS",
-                    ar.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
-                );
+            if cross_msvc {
+                // cargo xwin sets AR_x86_64-pc-windows-msvc to llvm-lib,
+                // which is not ar. llvm-ar is the same tool, but symlinked
+                // which changes the behaviour
+                //
+                // As workaround we link the provided llvm-lib to OUT_DIR as llvm-ar
+                // to mirror this behaviour
+                let archiver = Path::new(ar.get_program());
+                let resolved = if archiver.components().count() > 1 {
+                    archiver.to_path_buf()
+                } else {
+                    let paths = env::var_os("PATH").unwrap_or_default();
+                    env::split_paths(&paths)
+                        .map(|dir| dir.join(archiver))
+                        .find(|p| p.is_file())
+                        .ok_or_else(|| format!("failed to find {} in PATH", archiver.display()))?
+                };
+                let llvm_ar = out_dir.join("llvm-ar");
+                if llvm_ar.symlink_metadata().is_ok() {
+                    fs::remove_file(&llvm_ar)
+                        .map_err(|e| format!("removing {}: {e}", llvm_ar.display()))?;
+                }
+                #[cfg(unix)]
+                std::os::unix::fs::symlink(&resolved, &llvm_ar).map_err(|e| {
+                    format!(
+                        "linking {} to {}: {e}",
+                        llvm_ar.display(),
+                        resolved.display()
+                    )
+                })?;
+                #[cfg(not(unix))]
+                return Err(format!(
+                    "cannot link {} as llvm-ar on this host",
+                    resolved.display()
+                ));
+                let llvm_ar = llvm_ar.into_os_string();
+                configure.env("AR", &llvm_ar);
+                // `llvm-ar s` does the same as `llvm-ranlib`, which might not be
+                // installed either
+                let mut ranlib = llvm_ar;
+                ranlib.push(" s");
+                configure.env("RANLIB", ranlib);
+            } else {
+                configure.env("AR", ar.get_program());
+                if ar.get_args().count() != 0 {
+                    // On some platforms (like emscripten on windows), the ar to use may not be a
+                    // single binary, but instead a multi-argument command like `cmd /c emar.bar`.
+                    // We can't convey that through `AR` alone, and so also need to set ARFLAGS.
+                    configure.env(
+                        "ARFLAGS",
+                        ar.get_args().collect::<Vec<_>>().join(OsStr::new(" ")),
+                    );
+                }
+                let ranlib = cc.get_ranlib();
+                // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
+                let mut args = vec![ranlib.get_program()];
+                args.extend(ranlib.get_args());
+                configure.env("RANLIB", args.join(OsStr::new(" ")));
             }
-            let ranlib = cc.get_ranlib();
-            // OpenSSL does not support RANLIBFLAGS. Jam the flags in RANLIB.
-            let mut args = vec![ranlib.get_program()];
-            args.extend(ranlib.get_args());
-            configure.env("RANLIB", args.join(OsStr::new(" ")));
 
             // Make sure we pass extra flags like `-ffunction-sections` and
             // other things like ARM codegen flags.
@@ -647,7 +746,7 @@ impl Build {
 
         // On MSVC we use `nmake.exe` with a slightly different invocation, so
         // have that take a different path than the standard `make` below.
-        if target.contains("msvc") {
+        if target.contains("msvc") && !cross_msvc {
             let mut build =
                 cc::windows_registry::find(target, "nmake.exe").ok_or("failed to find nmake")?;
             build.arg("build_libs").current_dir(&inner_dir);
@@ -687,6 +786,18 @@ impl Build {
                 .arg(format!("DESTDIR={destdir}"))
                 .current_dir(&inner_dir);
             self.run_command(install, "installing OpenSSL")?;
+        }
+
+        if cross_msvc {
+            // rustc look for `<name>.lib`
+            for name in ["libssl", "libcrypto"] {
+                let lib_dir = install_dir.join("lib");
+                fs::rename(
+                    lib_dir.join(format!("{name}.a")),
+                    lib_dir.join(format!("{name}.lib")),
+                )
+                .map_err(|e| format!("renaming {name}.a: {e}"))?;
+            }
         }
 
         let libs = if target.contains("msvc") {
